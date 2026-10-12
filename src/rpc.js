@@ -43,7 +43,7 @@ export const ledgerKey = (contract, key, durability) => concat(u32(6), address(c
  * archived entry is still returned by RPC, with its value and a liveUntil
  * below the latest ledger (0 once evicted): `archived` says so.
  */
-export async function readEntries(ctx, contract, items) {
+export async function readEntries(ctx, contract, items, onProgress = () => {}) {
   const out = [];
   for (let i = 0; i < items.length; i += 200) {
     const chunk = items.slice(i, i + 200);
@@ -71,6 +71,7 @@ export async function readEntries(ctx, contract, items) {
       out.push({ value, raw: data.slice(prefix.length), ledger: e.lastModifiedLedgerSeq ?? null, liveUntil,
         archived: liveUntil !== null && Number(liveUntil) < Number(result.latestLedger) });
     });
+    onProgress(out.length);
   }
   return out;
 }

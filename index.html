@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Farmledge Verify</title>
+  <meta name="description" content="Check a Farmledge warehouse proof against the Stellar ledger, in your browser, without trusting Farmledge.">
+  <!-- No third-party anything: the only network request this page makes, besides its own files, is to the Stellar RPC endpoint named below. -->
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; connect-src 'self' https://soroban-testnet.stellar.org https:; img-src 'self' data: blob:; media-src blob:; style-src 'self'; font-src 'self'; script-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
+  <meta name="referrer" content="no-referrer">
+  <link rel="preload" href="fonts/dm-sans-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="style.css">
+  <link rel="icon" href="data:,">
+  <script type="module" src="src/app.js"></script>
+</head>
+<body>
+  <header class="top">
+    <div class="wrap">
+      <p class="brand">Farmledge <span>Verify</span></p>
+      <div class="network" id="network">
+        <p class="network-name">Checking against: <strong id="network-name">Stellar Testnet</strong></p>
+        <p class="network-note" id="network-note">A test network. Nothing checked here is a real deposit.</p>
+        <p class="network-contract">Contract <code class="mono" id="network-contract">CBW6TA5UJMXJY2VYPJV6WUVWNUP3PKZNPXFMC2CNVCWZDF3SKIT4UAIN</code></p>
+      </div>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <section class="intro">
+      <h1>Check a warehouse proof against the ledger</h1>
+      <p>A Farmledge <strong>proof bundle</strong> is Farmledge's claim about a deposit. It can reach you any way at all: from the farmer, by text message, or downloaded from a Farmledge server. That does not weaken this check.</p>
+      <p><strong>This page does not take Farmledge's word for anything.</strong> It checks the claim against the Stellar ledger, in your browser, and reads nothing else: no Farmledge server computes or reports the result. We are not asking you to trust us. We are proving we cannot have rewritten the books.</p>
+    </section>
+
+    <section class="card" aria-labelledby="check-h">
+      <h2 id="check-h">Check a proof bundle</h2>
+      <label for="bundle" class="label">Paste the bundle</label>
+      <textarea id="bundle" rows="5" spellcheck="false" autocomplete="off" placeholder='{"contract_id": "C…", "leaf": {…}, "proof": […], …}'></textarea>
+      <div class="actions">
+        <button type="button" id="check" class="primary">Check against the ledger</button>
+        <label class="button" for="file">Upload a file</label>
+        <input type="file" id="file" accept=".json,application/json,text/plain" hidden>
+        <button type="button" id="scan">Scan a QR code</button>
+      </div>
+      <div id="scanner" class="scanner" hidden>
+        <video id="video" playsinline muted></video>
+        <button type="button" id="scan-stop">Stop scanning</button>
+      </div>
+      <p id="input-status" class="small status" role="status"></p>
+      <p class="small">Or <button type="button" id="example" class="link">try the Testnet example</button>: a real anchor on Stellar's test network. Not a real deposit.</p>
+    </section>
+
+    <div id="result" class="result-area" aria-live="polite"></div>
+
+    <section class="card" aria-labelledby="wh-h">
+      <h2 id="wh-h">Warehouse anchoring record</h2>
+      <p class="small">Check whether a warehouse commits its books to the ledger, and how regularly. This says nothing about any particular deposit.</p>
+      <form id="wh-form" class="inline" novalidate>
+        <label for="wh" class="label">Warehouse id</label>
+        <input id="wh" type="text" spellcheck="false" autocomplete="off" autocapitalize="characters" placeholder="e.g. TESTNET_EXAMPLE_WH">
+        <button type="submit">Look up</button>
+      </form>
+      <p id="wh-status" class="small status" role="status"></p>
+      <div id="wh-result" aria-live="polite"></div>
+    </section>
+
+    <section class="card" aria-labelledby="self-h">
+      <h2 id="self-h">Verify this yourself, without this page</h2>
+      <p>This page is a convenience. Anyone with Python 3 and nothing else can run the same check:</p>
+      <ol>
+        <li>Download <a href="scripts/verify_proof.py" download>verify_proof.py</a> (about 200 lines, standard library only; read it).</li>
+        <li>Run <code class="mono">python3 verify_proof.py bundle.json --rpc https://soroban-testnet.stellar.org</code></li>
+        <li>Read the last line: <code class="mono">RESULT OK</code> or <code class="mono">RESULT DAY_ROOT_EXPIRED</code> are the only two verified results. Every other result is not.</li>
+      </ol>
+      <p class="small">Step-by-step instructions, and what each result means, are in the <a href="https://github.com/Awointa/farmledge-verify#verify-a-bundle-yourself-with-python-and-nothing-else">README</a>. The script is pinned by SHA-256 to Farmledge's protocol repository.</p>
+    </section>
+  </main>
+
+  <footer class="wrap foot">
+    <p class="small">Static files, no server, no tracking. The page and its tests are open source: <a href="https://github.com/Awointa/farmledge-verify">github.com/Awointa/farmledge-verify</a>, Apache 2.0.</p>
+  </footer>
+  <noscript><p class="wrap">This page checks proofs in your browser, which needs JavaScript. Without it, use the standalone script above.</p></noscript>
+</body>
+</html>

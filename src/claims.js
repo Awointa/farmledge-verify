@@ -43,20 +43,28 @@ export function receiptView(id, v, archived) {
   };
 }
 
-/** Every receipt ever minted from (warehouse_id, deposit_no), from the warehouse's index. */
-export async function readClaims(ctx, warehouseId, depositNo) {
+/**
+ * Every receipt ever minted from (warehouse_id, deposit_no), from the
+ * warehouse's index. This walks the whole index (issue #1), so it reports
+ * progress: onProgress({ step: 'pages' | 'receipts', done, total }).
+ */
+export async function readClaims(ctx, warehouseId, depositNo, onProgress = () => {}) {
   const wh = sv('symbol', warehouseId);
   const [pagesEntry] = await readEntries(ctx, ctx.contractId, [{ key: sv('vec', [sv('symbol', 'WarehousePages'), wh]), durability: PERSISTENT }]);
   const pages = pagesEntry === null ? 0 : pagesEntry.value;
   if (typeof pages !== 'number') throw new ChainUnreadable('unexpected page count');
+  onProgress({ step: 'pages', done: 0, total: pages });
   const pageEntries = await readEntries(ctx, ctx.contractId, Array.from({ length: pages }, (_, p) =>
-    ({ key: sv('vec', [sv('symbol', 'WarehouseIndex'), wh, sv('u32', p)]), durability: PERSISTENT })));
+    ({ key: sv('vec', [sv('symbol', 'WarehouseIndex'), wh, sv('u32', p)]), durability: PERSISTENT })),
+  (done) => onProgress({ step: 'pages', done, total: pages }));
   const ids = [];
   pageEntries.forEach((e, p) => {
     if (e === null || !Array.isArray(e.value)) throw new ChainUnreadable(`index page ${p} could not be read`);
     ids.push(...e.value);
   });
-  const entries = await readEntries(ctx, ctx.contractId, ids.map((id) => ({ key: receiptKey(id), durability: PERSISTENT })));
+  onProgress({ step: 'receipts', done: 0, total: ids.length });
+  const entries = await readEntries(ctx, ctx.contractId, ids.map((id) => ({ key: receiptKey(id), durability: PERSISTENT })),
+    (done) => onProgress({ step: 'receipts', done, total: ids.length }));
   const receipts = [];
   entries.forEach((e, i) => {
     // Persistent entries are never deleted, so an indexed receipt is always there, archived or not.

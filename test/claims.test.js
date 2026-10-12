@@ -73,3 +73,14 @@ test('an unreachable chain throws: the caller can only say it could not check', 
     await assert.rejects(claimsOf({ ...chainWith([pagesEntry('FIXTURE_WH', 1)]), fail }), { name: 'ChainUnreadable' }, fail);
   }
 });
+
+test('the walk reports progress, ending at the total', async () => {
+  const ids = Array.from({ length: 450 }, (_, i) => i + 1);
+  const entries = [pagesEntry('FIXTURE_WH', 1), indexEntry('FIXTURE_WH', 0, ids), ...ids.map((id) => receiptEntry({ ...R, id }))];
+  const rpc = await serveChain(chainWith(entries));
+  const seen = [];
+  try {
+    await readClaims({ rpcUrl: rpc.url, contractId: CONTRACT }, 'FIXTURE_WH', 101, (p) => seen.push(`${p.step} ${p.done}/${p.total}`));
+  } finally { await rpc.close(); }
+  assert.deepEqual(seen, ['pages 0/1', 'pages 1/1', 'receipts 0/450', 'receipts 200/450', 'receipts 400/450', 'receipts 450/450']);
+});

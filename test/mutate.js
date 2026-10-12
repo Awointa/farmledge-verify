@@ -13,7 +13,7 @@ const ROOT = fileURLToPath(new URL('../', import.meta.url));
 export const MUTATIONS = [
   // --- src/verify.js: the proof check ---
   ['network gate', 'src/verify.js', 'if (b.contract_id !== ctx.contractId) {', 'if (false) {'],
-  ['not an object', 'src/verify.js', "if (!isObject(b)) return result('BAD_BUNDLE', 'not a JSON object', facts);", ''],
+  ['not an object', 'src/verify.js', "if (!isObject(b)) return result('BAD_BUNDLE', 'not a JSON object', facts, endpoint);", ''],
   ['integers are integers', 'src/verify.js', "if (!ints.every(isInt)) throw new BadInput('integer fields must be JSON integers');", ''],
   ['later_days are u32', 'src/verify.js', 'for (const d of later) await chain(prev, ...d); // rejects days or counts that are not u32', ''],
   ['hashes are 32 bytes', 'src/verify.js', "if ([...proof, prev, ...later.map((d) => d[2])].some((x) => x.length !== 32)) throw new BadInput('hashes are 32 bytes');", ''],
@@ -33,7 +33,8 @@ export const MUTATIONS = [
   ['value shape from the chain', 'src/verify.js', "if (!ok) throw new ChainUnreadable('unexpected value shape');", ''],
   ['chain hashes are 32 bytes', 'src/verify.js', 'x instanceof Uint8Array && x.length === 32', 'x instanceof Uint8Array'],
   ['could-not-check shows nothing', 'src/verify.js', "const shown = code === 'COULD_NOT_CHECK' ? {} : { ...facts };", 'const shown = { ...facts };'],
-  ['results are frozen', 'src/verify.js', "return Object.freeze({ code, verified: OUTCOMES[code].verified, detail: detail ?? '', facts: Object.freeze(shown) });", "return { code, verified: OUTCOMES[code].verified, detail: detail ?? '', facts: shown };"],
+  ['results are frozen', 'src/verify.js', "return Object.freeze({ code, verified: OUTCOMES[code].verified, detail: detail ?? '', facts: Object.freeze(shown), endpoint });", "return { code, verified: OUTCOMES[code].verified, detail: detail ?? '', facts: shown, endpoint };"],
+  ['endpoint is the page\'s', 'src/verify.js', 'const endpoint = Object.freeze({ used: ctx.rpcUrl, suggested });', 'const endpoint = Object.freeze({ used: suggested ?? ctx.rpcUrl, suggested });'],
   ['only two codes are verified', 'src/verify.js', 'COULD_NOT_CHECK: { verified: false, exit: 3 },', 'COULD_NOT_CHECK: { verified: true, exit: 3 },'],
   ['pending is not verified', 'src/verify.js', 'NOT_YET_ANCHORED: { verified: false, exit: 2 },', 'NOT_YET_ANCHORED: { verified: true, exit: 2 },'],
   ['exact integers', 'src/verify.js', 'return /^-?(0|[1-9][0-9]*)$/.test(ctx.source) ? BigInt(ctx.source) : v;', 'return Number.isInteger(v) ? BigInt(v) : v;'],
@@ -68,6 +69,15 @@ export const MUTATIONS = [
   // --- src/warehouse.js ---
   ['warehouse: gaps', 'src/warehouse.js', 'if (!have.has(d)) gaps.push(d);', ''],
   ['warehouse: no head', 'src/warehouse.js', 'if (head === null) return { warehouseId, chainDay: today, head: null, days: [], gaps: [] };', ''],
+  // --- src/render.js: what the page shows ---
+  ['render: code and flag must agree', 'src/render.js', "const consistent = VERIFIED.includes(view.result.code) === (view.result.verified === true);", 'const consistent = true;'],
+  ['render: honesty beside the tick', 'src/render.js', 'verified ? [honesty(r), deposit(view.leaf)', 'verified ? [deposit(view.leaf)'],
+  ['render: recovery banner', 'src/render.js', "claims?.status === 'ok' && claims.data.summary.recovery ? recoveryBanner() : null,", ''],
+  ['render: could-not-check tone', 'src/render.js', "case 'COULD_NOT_CHECK': default: return { tone: 'nocheck', icon: 'question',", "case 'COULD_NOT_CHECK': default: return { tone: 'verified', icon: 'check',"],
+  ['render: pending is not verified', 'src/render.js', "case 'NOT_YET_ANCHORED': return { tone: 'pending', icon: 'clock',", "case 'NOT_YET_ANCHORED': return { tone: 'verified', icon: 'check',"],
+  ['render: source shown', 'src/render.js', '    sourceLine(view.source),\n', ''],
+  ['render: suggested endpoint shown', 'src/render.js', ": ['The bundle suggested ', mono(e.suggested), ': not used. A bundle cannot choose what it is checked against.']);", ": '');"],
+  ['render: why expired suffices', 'src/render.js', "r.code === 'DAY_ROOT_EXPIRED'\n      ? h('p'", "false\n      ? h('p'"],
   // --- src/input.js ---
   ['input: capture receipts recognised', 'src/input.js', "if (m) return { kind: 'capture', depositId: m[1] };", ''],
   ['input: slip leaf fields only', 'src/input.js', 'for (const k of LEAF_FIELDS) if (k in v) leaf[k] = v[k];', 'Object.assign(leaf, v);'],
@@ -77,16 +87,17 @@ export const MUTATIONS = [
 function run(only) {
   const survivors = [];
   const list = MUTATIONS.filter(([name]) => only.length === 0 || only.includes(name));
-  for (const [name, file, find, replace] of list) {
+  for (let [name, file, find, replace] of list) {
     const path = `${ROOT}${file}`;
     const original = readFileSync(path, 'utf8');
+    find = find.replace(/\\n/g, '\n'); replace = replace.replace(/\\n/g, '\n');
     const count = original.split(find).length - 1;
     if (count !== 1) throw new Error(`mutation "${name}": expected the text once in ${file}, found it ${count} times`);
     writeFileSync(path, original.replace(find, replace));
     let res;
     try {
       res = spawnSync(process.execPath, ['--test', '--test-timeout=20000', 'test/*.test.js'], {
-        cwd: ROOT, env: { ...process.env, FARMLEDGE_SKIP_PYTHON: '1' }, encoding: 'utf8',
+        cwd: ROOT, env: { ...process.env, FARMLEDGE_SKIP_PYTHON: '1', FARMLEDGE_SKIP_BROWSER: '1' }, encoding: 'utf8',
       });
     } finally {
       writeFileSync(path, original);

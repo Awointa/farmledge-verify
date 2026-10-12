@@ -8,17 +8,17 @@
     "entries": [
       {
         "key": "AAAABgAAAAFt6YO0Sy6carh6a+tStm0ft6stfcrBaE2orZGXclInygAAABAAAAABAAAAAgAAAA8AAAAESGVhZAAAAA8AAAAKRklYVFVSRV9XSAAAAAAAAQ==",
-        "xdr": "AAAABgAAAAAAAAABbemDtEsunGq4emvrUrZtH7erLX3KwWhNqK2Rl3JSJ8oAAAAQAAAAAQAAAAIAAAAPAAAABEhlYWQAAAAPAAAACkZJWFRVUkVfV0gAAAAAAAEAAAAQAAAAAQAAAAIAAAADAABQ3AAAAA0AAAAgOhHr4Z3mM3KRk+DRn4KghjnKSLZm7yKLoS95lUOQTFI=",
+        "xdr": "AAAABgAAAAAAAAABbemDtEsunGq4emvrUrZtH7erLX3KwWhNqK2Rl3JSJ8oAAAAQAAAAAQAAAAIAAAAPAAAABEhlYWQAAAAPAAAACkZJWFRVUkVfV0gAAAAAAAEAAAAQAAAAAQAAAAIAAAADAABQ3AAAAA0AAAAg31cOU4xwyrsoRQ1uFbcCjgYvS3G81mw3jWlPT5YAidc=",
         "lastModifiedLedgerSeq": 5000000,
         "liveUntilLedgerSeq": 9000000
       },
       {
         "key": "AAAABgAAAAFt6YO0Sy6carh6a+tStm0ft6stfcrBaE2orZGXclInygAAABAAAAABAAAAAwAAAA8AAAAHRGF5Um9vdAAAAAAPAAAACkZJWFRVUkVfV0gAAAAAAAMAAFDcAAAAAA==",
-        "xdr": "AAAABgAAAAAAAAABbemDtEsunGq4emvrUrZtH7erLX3KwWhNqK2Rl3JSJ8oAAAAQAAAAAQAAAAMAAAAPAAAAB0RheVJvb3QAAAAADwAAAApGSVhUVVJFX1dIAAAAAAADAABQ3AAAAAAAAAAQAAAAAQAAAAIAAAANAAAAIHCgYiNmMcfU8OZOjyxVGsu1hBNipViu+5kP4lFjqcriAAAAAwAAAAU=",
+        "xdr": "AAAABgAAAAAAAAABbemDtEsunGq4emvrUrZtH7erLX3KwWhNqK2Rl3JSJ8oAAAAQAAAAAQAAAAMAAAAPAAAAB0RheVJvb3QAAAAADwAAAApGSVhUVVJFX1dIAAAAAAADAABQ3AAAAAAAAAAQAAAAAQAAAAIAAAANAAAAIJrv/xQeoww/r6GI7BARZmCaGPLRY84V4DdxNLIfrtVcAAAAAwAAAAU=",
         "lastModifiedLedgerSeq": 5000000,
         "liveUntilLedgerSeq": 9000000
       }
     ]
   },
-  "bundleText": "{\n  \"rpc\": \"https://rpc.example.invalid\",\n  \"contract_id\": \"CBW6TA5UJMXJY2VYPJV6WUVWNUP3PKZNPXFMC2CNVCWZDF3SKIT4UAIN\",\n  \"leaf\": {\n    \"version\": 1,\n    \"kind\": 0,\n    \"warehouse_id\": \"FIXTURE_WH\",\n    \"day\": 20700,\n    \"index\": 1,\n    \"deposit_no\": 101,\n    \"deposit_id\": \"FIXTURE-LOT-101\",\n    \"receipt_id\": 0,\n    \"receipt_version\": 0,\n    \"owner\": \"GALEKIVUALWUHOUN2FOJCCNTGR6NDWO4MNUYFBUBCR2HQTM6D5FIECXX\",\n    \"commodity\": \"MAIZE_WHITE\",\n    \"grade\": \"GRADE_1\",\n    \"kg\": -1,\n    \"weight_source\": \"Scale\",\n    \"bags\": 40,\n    \"moisture_bps\": 1250,\n    \"custodian\": \"GDVKP5225RBIPLQS6CKBPTFKUTXHIU7BURNHGFVPM2L3RKZVNAUB445J\",\n    \"verifier\": \"GDE46EEN37PDYYALVGLYJ7CRYK5UEXXZSRAPLWYU5Y4RM2FG6I35PZ4G\",\n    \"deposited_at\": 1788516000,\n    \"at\": 1788516001,\n    \"salt\": \"68636bc401f5abb5499d165fd80c50e227e4b750f5452da104b037ad8f9e18d0\"\n  },\n  \"proof\": [\n    \"529f700b59bc8c0f1b78c226a9ae7d1d2cea669dd6f0cd985181ba690bbb2568\",\n    \"0544122aa63b2e95df1e1c7abd3aff2c3b18bea0fdb3750d3593c07938367c7a\",\n    \"3b86b43491e454a21c1162d884b7b8d69f53bfc830e6d0dba558790b9f31a3e5\"\n  ],\n  \"day_leaves\": 5,\n  \"prev_head\": \"cac8815f969ab1f2617ec6381899afa1434b10ce4c16a1c989af78b6ff918a76\",\n  \"later_days\": []\n}"
+  "bundleText": "{\n  \"rpc\": \"https://rpc.example.invalid\",\n  \"contract_id\": \"CBW6TA5UJMXJY2VYPJV6WUVWNUP3PKZNPXFMC2CNVCWZDF3SKIT4UAIN\",\n  \"leaf\": {\n    \"version\": 1,\n    \"kind\": 0,\n    \"warehouse_id\": \"FIXTURE_WH\",\n    \"day\": 20700,\n    \"index\": 1,\n    \"deposit_no\": 101,\n    \"deposit_id\": \"FIXTURE-LOT-101\",\n    \"receipt_id\": 0,\n    \"receipt_version\": 0,\n    \"owner\": \"GALEKIVUALWUHOUN2FOJCCNTGR6NDWO4MNUYFBUBCR2HQTM6D5FIECXX\",\n    \"commodity\": \"MAIZE_WHITE\",\n    \"grade\": \"GRADE_1\",\n    \"kg\": -1,\n    \"weight_source\": \"Scale\",\n    \"bags\": 40,\n    \"moisture_bps\": 1250,\n    \"custodian\": \"GDVKP5225RBIPLQS6CKBPTFKUTXHIU7BURNHGFVPM2L3RKZVNAUB445J\",\n    \"verifier\": \"GDE46EEN37PDYYALVGLYJ7CRYK5UEXXZSRAPLWYU5Y4RM2FG6I35PZ4G\",\n    \"deposited_at\": 1788516000,\n    \"at\": 1788516001,\n    \"salt\": \"68636bc401f5abb5499d165fd80c50e227e4b750f5452da104b037ad8f9e18d0\"\n  },\n  \"proof\": [\n    \"529f700b59bc8c0f1b78c226a9ae7d1d2cea669dd6f0cd985181ba690bbb2568\",\n    \"c128aafb08e2d1757a512f13a1d7f961d1b22546c6ae16b150369046c6cd41e4\",\n    \"b3daabf9e196646ab79b405eb2b8b3a4aad2eec0d6d5f44d6e70b15b1fc343be\"\n  ],\n  \"day_leaves\": 5,\n  \"prev_head\": \"cac8815f969ab1f2617ec6381899afa1434b10ce4c16a1c989af78b6ff918a76\",\n  \"later_days\": []\n}"
 }

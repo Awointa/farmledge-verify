@@ -115,14 +115,32 @@ does and the script does not.
 
 ## The page
 
-Static files, with no build step and no runtime dependency (see "Why no
-library" below). It reads only from a public Soroban RPC endpoint, always
-the one it is configured with and never one a bundle names, and it refuses
-a bundle for any contract other than the one it is configured for. The
-verification result is computed in your browser; no server computes or
-reports it.
+`index.html`, `style.css`, `src/` and `fonts/`: static files, no build step,
+no server, no runtime dependency. It accepts a bundle pasted, uploaded,
+scanned from a QR code, carried in a link (`#bundle=<base64url>`, never sent
+to any server) or fetched from a URL (`?src=https://…`), and always says
+which. It recognises the two QR forms printed on counter slips today (a
+tablet capture receipt, and the post-sync leaf) and explains them; neither
+is checked, because neither carries a proof.
 
-The page lives in `index.html` and `src/`. It is not built yet (checkpoint 3).
+- **One network, shown on every screen.** It checks Stellar Testnet,
+  contract `CBW6TA5U…KIT4UAIN` (`src/config.js`), and refuses outright a
+  bundle naming any other contract.
+- **The endpoint is configuration.** Every chain read goes to the RPC in
+  `src/config.js`. The bundle's `rpc` is shown as a suggestion and never
+  dialled.
+- **Verified means exactly `OK` or `DAY_ROOT_EXPIRED`,** computed in the
+  browser. Every verified result states what was and was not checked beside
+  the tick. "Could not check" is never rendered as a result.
+- **A lot's claims, not a status.** One row per receipt issued from the
+  lot, with weight and state (unencumbered, pledged, in recovery, released,
+  revoked) and a summary in kilograms. Recovery is a red banner above
+  everything. Loan references are never shown (farmledge-protocol#12).
+- **Warehouse anchoring record:** whether a warehouse has a head, its day
+  roots still on the ledger, and any gaps. It says nothing about any
+  deposit.
+
+Screenshots of every state: [`docs/screenshots/`](docs/screenshots/).
 
 ## Development
 
@@ -130,10 +148,11 @@ The page lives in `index.html` and `src/`. It is not built yet (checkpoint 3).
 npm ci
 npm test                 # all tests, including the conformance test
 node test/mutate.js      # the mutation pass
-npm run test:live        # against the real Testnet
+npm run test:live        # against the real Testnet, including the page
+npm run screenshots      # docs/screenshots/, every state of the page
 ```
 
-Node 22 or later, and Python 3 for the conformance test.
+Node 22 or later, Python 3 for the conformance test, and Chrome or Playwright's Chromium for the page test.
 
 **Conformance** (`test/conformance.test.js`) is the most important test
 here. Every fixture in `test/fixtures/` (valid, tampered leaf, path, index
@@ -157,10 +176,14 @@ it still verifies in both verifiers.
 
 The page needs only SHA-256 (built into browsers) and a small subset of
 Stellar's XDR, which `src/xdr.js` writes out by hand to mirror
-`verify_proof.py` line by line. That keeps the page under 20 KB for a
-mid-range phone on 3G, against about 113 KB gzipped for the Stellar SDK's
-core. The SDK is still used, in the tests, to check that encoding
-independently (`test/xdr.test.js`).
+`verify_proof.py` line by line. The page's code is about 24 KB gzipped, plus
+82 KB of self-hosted fonts that swap in after the text has rendered,
+against about 113 KB gzipped for the Stellar SDK's core alone. The SDK is
+still used, in the tests, to check that encoding independently:
+`test/xdr.test.js`, and `test/fuzz.test.js`, which encodes 10,000 random
+leaves per seed (a fixed one and a random one, every CI run) with the
+hand-rolled code, the SDK and `verify_proof.py`, and fails on any byte of
+difference, printing both hex dumps.
 
 ## License
 
