@@ -30,6 +30,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      # The shipped verify_proof.py is the protocol's, byte for byte, at the pinned commit.
+      - name: Pinned verifier matches farmledge-protocol
+        run: |
+          commit=$(python3 -c "import json; print(json.load(open('scripts/verify_proof.pin.json'))['commit'])")
+          curl -fsSL "https://raw.githubusercontent.com/Awointa/farmledge-protocol/$commit/scripts/verify_proof.py" | cmp - scripts/verify_proof.py
       - uses: actions/setup-node@v4
         with:
           node-version: 22
@@ -39,3 +44,22 @@ jobs:
       - run: npm ci
       - run: npx playwright-core install --with-deps chromium
       - run: npm run test:live
+
+  deploy:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: [test]
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - run: ./scripts/build-site.sh _site
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+      - id: deployment
+        uses: actions/deploy-pages@v4

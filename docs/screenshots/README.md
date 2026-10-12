@@ -1,189 +1,145 @@
 # Every state of the page
 
-Made by `npm run screenshots` (`test/page.test.js`) at 390 px wide. Except `00` and `30`, which ran against the real Testnet, every screenshot is the page answering from a **test fixture's chain**, served in place of the RPC by the test harness: synthetic data, not a real or Testnet deposit. The page itself has no test or demo mode.
+> ## ⚠ 01–29 ARE SYNTHETIC. ONLY 00 AND 30 ARE REAL TESTNET ANCHORS.
+>
+> Screenshots **01–29** (`*-synthetic-*.png`) show the page answering from
+> **synthetic test data**: fixture chains served to the unmodified page by the
+> test harness in place of the RPC. Nothing in them was anchored on any
+> network. Their warehouse (`FIXTURE_WH`), lots, receipts, lender, dates,
+> ledger numbers and anchoring times are made up, and each image carries a
+> purple **SYNTHETIC TEST DATA** banner and watermark.
+>
+> Only **00** and **30** (`*-live-testnet-*.png`) are real: the page checking
+> the Testnet example against Stellar's test network. Even those are **not a
+> real deposit**: the example lot is synthetic, anchored on a test network.
+>
+> **Never present a synthetic screenshot as a real anchor.** If one goes in a
+> slide, keep its banner visible and say it is synthetic.
 
-## 00-testnet-example-live
+Made by `npm run screenshots` (`test/page.test.js`), at 390 px wide, against the
+site exactly as deployed. The page itself has no test or demo mode; the banner
+and watermark are added by the test harness.
 
-The Testnet example, checked against the real Testnet: OK, part pledged, part released
+## 00 · REAL (Testnet) · The Testnet example, checked against the real Testnet: verified; part pledged, part released
 
-![00-testnet-example-live](00-testnet-example-live.png)
+![00-live-testnet-testnet-example.png](00-live-testnet-testnet-example.png)
 
-## 01-landing
+## 01 · SYNTHETIC · Landing page: the network banner, the trust distinction, input
 
-Landing page: the network banner, the trust distinction, input
+![01-synthetic-landing.png](01-synthetic-landing.png)
 
-![01-landing](01-landing.png)
+## 02 · SYNTHETIC · Verified; one unencumbered receipt
 
-## 02-ok-active
+![02-synthetic-ok-active.png](02-synthetic-ok-active.png)
 
-Verified; one unencumbered receipt
+## 03 · SYNTHETIC · Verified; part pledged, part free, part released
 
-![02-ok-active](02-ok-active.png)
+![03-synthetic-ok-pledged.png](03-synthetic-ok-pledged.png)
 
-## 03-ok-pledged
+## 04 · SYNTHETIC · Verified; a lender has begun recovery (red banner above everything)
 
-Verified; part pledged, part free, part released
+![04-synthetic-ok-recovery.png](04-synthetic-ok-recovery.png)
 
-![03-ok-pledged](03-ok-pledged.png)
+## 05 · SYNTHETIC · Verified; the whole lot released
 
-## 04-ok-recovery
+![05-synthetic-ok-exited.png](05-synthetic-ok-exited.png)
 
-Verified; a lender has begun recovery (red banner above everything)
+## 06 · SYNTHETIC · Verified; the receipt revoked
 
-![04-ok-recovery](04-ok-recovery.png)
+![06-synthetic-ok-revoked.png](06-synthetic-ok-revoked.png)
 
-## 05-ok-exited
+## 07 · SYNTHETIC · Verified; a released receipt archived on the ledger, explained
 
-Verified; the whole lot released
+![07-synthetic-ok-archived-receipt.png](07-synthetic-ok-archived-receipt.png)
 
-![05-ok-exited](05-ok-exited.png)
+## 08 · SYNTHETIC · Verified; no receipt issued for the lot
 
-## 06-ok-revoked
+![08-synthetic-ok-no-receipt.png](08-synthetic-ok-no-receipt.png)
 
-Verified; the receipt revoked
+## 09 · SYNTHETIC · DAY_ROOT_EXPIRED: verified through the head chain, and why that is enough
 
-![06-ok-revoked](06-ok-revoked.png)
+![09-synthetic-day-root-expired.png](09-synthetic-day-root-expired.png)
 
-## 07-ok-archived-receipt
+## 10 · SYNTHETIC · Verified; the warehouse's head archived, read and matched
 
-Verified; a released receipt archived on the ledger, explained
+![10-synthetic-head-archived.png](10-synthetic-head-archived.png)
 
-![07-ok-archived-receipt](07-ok-archived-receipt.png)
+## 11 · SYNTHETIC · NOT_YET_ANCHORED: pending, not failed
 
-## 08-ok-no-receipt
+![11-synthetic-not-yet-anchored.png](11-synthetic-not-yet-anchored.png)
 
-Verified; no receipt issued for the lot
+## 12 · SYNTHETIC · DAY_ROOT_DIFFERS: altered or forged
 
-![08-ok-no-receipt](08-ok-no-receipt.png)
+![12-synthetic-forged-day-root-differs.png](12-synthetic-forged-day-root-differs.png)
 
-## 09-day-root-expired
+## 13 · SYNTHETIC · HEAD_MISMATCH: root on chain but not chained (how backdating shows up)
 
-DAY_ROOT_EXPIRED: verified through the head chain, and why that is enough
+![13-synthetic-unchained-head-mismatch.png](13-synthetic-unchained-head-mismatch.png)
 
-![09-day-root-expired](09-day-root-expired.png)
+## 14 · SYNTHETIC · HEAD_MISMATCH: a bundle missing its later days
 
-## 10-head-archived
+![14-synthetic-stale-bundle-head-mismatch.png](14-synthetic-stale-bundle-head-mismatch.png)
 
-Verified; the warehouse's head archived, read and matched
+## 15 · SYNTHETIC · NO_HEAD: nothing anchored this claim
 
-![10-head-archived](10-head-archived.png)
+![15-synthetic-no-head.png](15-synthetic-no-head.png)
 
-## 11-not-yet-anchored
+## 16 · SYNTHETIC · PROOF_DOES_NOT_FIT
 
-NOT_YET_ANCHORED: pending, not failed
+![16-synthetic-proof-does-not-fit.png](16-synthetic-proof-does-not-fit.png)
 
-![11-not-yet-anchored](11-not-yet-anchored.png)
+## 17 · SYNTHETIC · DAY_IN_FUTURE
 
-## 12-forged-day-root-differs
+![17-synthetic-day-in-future.png](17-synthetic-day-in-future.png)
 
-DAY_ROOT_DIFFERS: altered or forged
+## 18 · SYNTHETIC · BAD_BUNDLE: nothing was checked
 
-![12-forged-day-root-differs](12-forged-day-root-differs.png)
+![18-synthetic-bad-bundle.png](18-synthetic-bad-bundle.png)
 
-## 13-unchained-head-mismatch
+## 19 · SYNTHETIC · COULD_NOT_CHECK: RPC refused
 
-HEAD_MISMATCH: root on chain but not chained (backdating)
+![19-synthetic-could-not-check-refused.png](19-synthetic-could-not-check-refused.png)
 
-![13-unchained-head-mismatch](13-unchained-head-mismatch.png)
+## 20 · SYNTHETIC · COULD_NOT_CHECK: RPC HTTP 500
 
-## 14-stale-bundle-head-mismatch
+![20-synthetic-could-not-check-http-error.png](20-synthetic-could-not-check-http-error.png)
 
-HEAD_MISMATCH: a bundle missing its later days
+## 21 · SYNTHETIC · COULD_NOT_CHECK: offline
 
-![14-stale-bundle-head-mismatch](14-stale-bundle-head-mismatch.png)
+![21-synthetic-could-not-check-offline.png](21-synthetic-could-not-check-offline.png)
 
-## 15-no-head
+## 22 · SYNTHETIC · WRONG_NETWORK: refused, nothing read
 
-NO_HEAD: nothing anchored this claim
+![22-synthetic-wrong-network.png](22-synthetic-wrong-network.png)
 
-![15-no-head](15-no-head.png)
+## 23 · SYNTHETIC · Progress while the lot's claims are read
 
-## 16-proof-does-not-fit
+![23-synthetic-claims-progress.png](23-synthetic-claims-progress.png)
 
-PROOF_DOES_NOT_FIT
+## 24 · SYNTHETIC · Verified, but the claims could not be read
 
-![16-proof-does-not-fit](16-proof-does-not-fit.png)
+![24-synthetic-ok-claims-unreadable.png](24-synthetic-ok-claims-unreadable.png)
 
-## 17-day-in-future
+## 25 · SYNTHETIC · A tablet capture receipt QR: proves nothing
 
-DAY_IN_FUTURE
+![25-synthetic-capture-receipt.png](25-synthetic-capture-receipt.png)
 
-![17-day-in-future](17-day-in-future.png)
+## 26 · SYNTHETIC · The post-sync slip leaf: a claim, not a proof
 
-## 18-bad-bundle
+![26-synthetic-slip-leaf-unverified.png](26-synthetic-slip-leaf-unverified.png)
 
-BAD_BUNDLE: nothing was checked
+## 27 · SYNTHETIC · A deposit number typed in: not checkable
 
-![18-bad-bundle](18-bad-bundle.png)
+![27-synthetic-not-a-bundle.png](27-synthetic-not-a-bundle.png)
 
-## 19-could-not-check-refused
+## 28 · SYNTHETIC · Warehouse anchoring record with a missed day
 
-COULD_NOT_CHECK: RPC refused
+![28-synthetic-warehouse-gap.png](28-synthetic-warehouse-gap.png)
 
-![19-could-not-check-refused](19-could-not-check-refused.png)
+## 29 · SYNTHETIC · Warehouse anchoring record: no anchor
 
-## 20-could-not-check-http-error
+![29-synthetic-warehouse-none.png](29-synthetic-warehouse-none.png)
 
-COULD_NOT_CHECK: RPC HTTP 500
+## 30 · REAL (Testnet) · Warehouse anchoring record for the Testnet example warehouse
 
-![20-could-not-check-http-error](20-could-not-check-http-error.png)
-
-## 21-could-not-check-offline
-
-COULD_NOT_CHECK: offline
-
-![21-could-not-check-offline](21-could-not-check-offline.png)
-
-## 22-wrong-network
-
-WRONG_NETWORK: refused, nothing read
-
-![22-wrong-network](22-wrong-network.png)
-
-## 23-claims-progress
-
-Progress while the claims are read
-
-![23-claims-progress](23-claims-progress.png)
-
-## 24-ok-claims-unreadable
-
-Verified, but the claims could not be read
-
-![24-ok-claims-unreadable](24-ok-claims-unreadable.png)
-
-## 25-capture-receipt
-
-A tablet capture receipt QR: proves nothing
-
-![25-capture-receipt](25-capture-receipt.png)
-
-## 26-slip-leaf-unverified
-
-The post-sync slip leaf: a claim, not a proof
-
-![26-slip-leaf-unverified](26-slip-leaf-unverified.png)
-
-## 27-not-a-bundle
-
-A deposit number typed in: not checkable
-
-![27-not-a-bundle](27-not-a-bundle.png)
-
-## 28-warehouse-gap
-
-Warehouse anchoring record with a missed day
-
-![28-warehouse-gap](28-warehouse-gap.png)
-
-## 29-warehouse-none
-
-Warehouse anchoring record: no anchor
-
-![29-warehouse-none](29-warehouse-none.png)
-
-## 30-warehouse-live
-
-Warehouse anchoring record for the Testnet example warehouse, live
-
-![30-warehouse-live](30-warehouse-live.png)
+![30-live-testnet-warehouse-record.png](30-live-testnet-warehouse-record.png)

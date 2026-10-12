@@ -1,7 +1,7 @@
 {
   "repo": "Awointa/farmledge-protocol",
   "path": "scripts/verify_proof.py",
-  "commit": "7d9fa397a5104558d2beef72012e4bfb4fa068a0",
+  "commit": "3f731e82b28523f0ac2b247a026c1ebf67df0a83",
   "pr": 13,
   "sha256": "595ac15ccc59672565221bca67204658d1a7d05beba3a828be34063b373ed18b"
 }

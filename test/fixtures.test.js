@@ -23,3 +23,13 @@ test('scripts/verify_proof.py is the pinned protocol version', () => {
   const got = createHash('sha256').update(readFileSync(fileURLToPath(new URL('../scripts/verify_proof.py', import.meta.url)))).digest('hex');
   assert.equal(got, pin.sha256, `verify_proof.py differs from farmledge-protocol ${pin.commit}`);
 });
+
+test("the page and README link the protocol at the pinned commit", () => {
+  const pin = JSON.parse(readFileSync(fileURLToPath(new URL('../scripts/verify_proof.pin.json', import.meta.url)), 'utf8'));
+  for (const f of ['../index.html', '../README.md']) {
+    const text = readFileSync(fileURLToPath(new URL(f, import.meta.url)), 'utf8');
+    const commits = [...text.matchAll(/farmledge-protocol\/blob\/([0-9a-f]{40})\//g)].map((m) => m[1]);
+    assert.ok(commits.length >= 2, f);
+    for (const c of commits) assert.equal(c, pin.commit, `${f} links ${c}`);
+  }
+});

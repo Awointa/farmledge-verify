@@ -4,7 +4,10 @@
 // Testnet example runs against the real Testnet when LIVE=1.
 //
 // SCREENSHOTS=1 writes docs/screenshots/*.png.
-import { mkdirSync } from 'node:fs';
+import { execFileSync } from 'node:child_process';
+import { mkdirSync, mkdtempSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { after, before, test } from 'node:test';
 import assert from 'node:assert/strict';
 import { fileURLToPath } from 'node:url';
@@ -22,14 +25,19 @@ const SHOTS = process.env.SCREENSHOTS === '1';
 const SHOT_DIR = fileURLToPath(new URL('../docs/screenshots/', import.meta.url));
 let browser;
 let site;
+let built;
 
 before(async () => {
   if (SKIP) return;
-  site = await serveStatic(fileURLToPath(new URL('../', import.meta.url)));
+  // Serve the site exactly as deployed: a file the build leaves out fails here.
+  const root = fileURLToPath(new URL('../', import.meta.url));
+  built = join(mkdtempSync(join(tmpdir(), 'farmledge-site-')), '_site');
+  execFileSync(join(root, 'scripts/build-site.sh'), [built], { cwd: root });
+  site = await serveStatic(built);
   try { browser = await chromium.launch({ channel: 'chrome' }); } catch { browser = await chromium.launch(); }
   if (SHOTS) mkdirSync(SHOT_DIR, { recursive: true });
 });
-after(async () => { await browser?.close(); await site?.close(); });
+after(async () => { await browser?.close(); await site?.close(); if (built) rmSync(join(built, '..'), { recursive: true, force: true }); });
 
 /** A page whose RPC requests go to `chain` (a fixture chain), or to the real network when chain is null. */
 async function open(chain, { hook } = {}) {
@@ -64,8 +72,39 @@ const settle = (page, where = '#result') => page.waitForFunction((w) => {
   return r && !document.querySelector(`${w} [aria-busy="true"]`) && !['CHECKING', 'IDLE'].includes(r.dataset.state);
 }, where, { timeout: 30_000 });
 
-async function shot(page, name) {
-  if (SHOTS) await page.screenshot({ path: `${SHOT_DIR}${name}.png`, fullPage: true });
+/**
+ * Synthetic screenshots carry the label in the image itself, so it travels
+ * with the file into a slide. The banner is injected here, by the harness:
+ * the page has no such mode.
+ */
+async function shot(page, name, { live = false } = {}) {
+  if (!SHOTS) return;
+  const [num, ...rest] = name.split('-');
+  const file = `${num}-${live ? 'live-testnet' : 'synthetic'}-${rest.join('-')}`;
+  if (!live) {
+    await page.evaluate(() => {
+      const label = 'SYNTHETIC TEST DATA \u00b7 served by the test harness \u00b7 not a real anchor, not a real deposit';
+      const banner = () => {
+        const b = document.createElement('div');
+        b.textContent = label;
+        // CSSOM, not a style attribute: the page's CSP (style-src 'self') stays in force.
+        Object.assign(b.style, { padding: '8px', background: '#5b2d8e', color: '#fff', font: '700 13px/1.3 system-ui,sans-serif', textAlign: 'center' });
+        return b;
+      };
+      document.body.prepend(banner());
+      document.body.append(banner());
+      document.body.style.position = 'relative';
+      document.documentElement.style.overflowX = 'hidden';
+      for (let y = 300; y < document.body.scrollHeight; y += 700) {
+        const w = document.createElement('div');
+        w.textContent = 'SYNTHETIC';
+        Object.assign(w.style, { position: 'absolute', top: `${y}px`, left: '0', right: '0', zIndex: '98', textAlign: 'center',
+          font: '900 64px/1 system-ui,sans-serif', color: 'rgba(91,45,142,.18)', transform: 'rotate(-28deg)', pointerEvents: 'none' });
+        document.body.append(w);
+      }
+    });
+  }
+  await page.screenshot({ path: `${SHOT_DIR}${file}.png`, fullPage: true });
 }
 
 async function paste(page, text) {
@@ -230,11 +269,11 @@ test('page: the Testnet example, against the real Testnet', { skip: SKIP || !LIV
     const t = await p.page.locator('#result').innerText();
     assert.match(t, /Testnet example: a real anchor on Stellar's test network\. Not a real deposit\./);
     assert.match(t, /4,000 kg total.*2,400 kg unencumbered.*1,200 kg pledged.*400 kg released/s);
-    await shot(p.page, '00-testnet-example-live');
+    await shot(p.page, '00-testnet-example', { live: true });
     await p.page.fill('#wh', 'TESTNET_EXAMPLE_WH');
     await p.page.click('#wh-form button');
     await settle(p.page, '#wh-result');
     await p.page.locator('#wh-form').scrollIntoViewIfNeeded();
-    await shot(p.page, '30-warehouse-live');
+    await shot(p.page, '30-warehouse-record', { live: true });
   } finally { await p.close(); }
 });

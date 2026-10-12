@@ -33,8 +33,11 @@ You need Python 3.8 or later and an internet connection. Nothing to install.
    ```
 
    This must equal `sha256` in [`scripts/verify_proof.pin.json`](scripts/verify_proof.pin.json),
-   which also names the farmledge-protocol commit it comes from. The same
-   script is printed in full in farmledge-protocol's `docs/events.md`.
+   which also names the farmledge-protocol commit it comes from. It is byte
+   for byte the protocol's own
+   [`scripts/verify_proof.py`](https://github.com/Awointa/farmledge-protocol/blob/3f731e82b28523f0ac2b247a026c1ebf67df0a83/scripts/verify_proof.py),
+   and is printed in full in the protocol specification,
+   [`docs/events.md`](https://github.com/Awointa/farmledge-protocol/blob/3f731e82b28523f0ac2b247a026c1ebf67df0a83/docs/events.md#farmer-proofs).
 
 2. **Get the bundle**, a `.json` file, from whoever gave you the proof.
 
@@ -177,7 +180,9 @@ it still verifies in both verifiers.
 The page needs only SHA-256 (built into browsers) and a small subset of
 Stellar's XDR, which `src/xdr.js` writes out by hand to mirror
 `verify_proof.py` line by line. The page's code is about 24 KB gzipped, plus
-82 KB of self-hosted fonts that swap in after the text has rendered,
+29 KB of self-hosted fonts subset by `fonts/subset.py` (they swap in after
+the text has rendered; `test/fonts.test.js` fails if page text ever needs a
+character they lack),
 against about 113 KB gzipped for the Stellar SDK's core alone. The SDK is
 still used, in the tests, to check that encoding independently:
 `test/xdr.test.js`, and `test/fuzz.test.js`, which encodes 10,000 random

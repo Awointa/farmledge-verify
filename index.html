@@ -8,7 +8,7 @@
   <!-- No third-party anything: the only network request this page makes, besides its own files, is to the Stellar RPC endpoint named below. -->
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; connect-src 'self' https://soroban-testnet.stellar.org https:; img-src 'self' data: blob:; media-src blob:; style-src 'self'; font-src 'self'; script-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
   <meta name="referrer" content="no-referrer">
-  <link rel="preload" href="fonts/dm-sans-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="fonts/dm-sans-400.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="style.css">
   <link rel="icon" href="data:,">
   <script type="module" src="src/app.js"></script>
@@ -72,7 +72,7 @@
         <li>Run <code class="mono">python3 verify_proof.py bundle.json --rpc https://soroban-testnet.stellar.org</code></li>
         <li>Read the last line: <code class="mono">RESULT OK</code> or <code class="mono">RESULT DAY_ROOT_EXPIRED</code> are the only two verified results. Every other result is not.</li>
       </ol>
-      <p class="small">Step-by-step instructions, and what each result means, are in the <a href="https://github.com/Awointa/farmledge-verify#verify-a-bundle-yourself-with-python-and-nothing-else">README</a>. The script is pinned by SHA-256 to Farmledge's protocol repository.</p>
+      <p class="small">Step-by-step instructions, and what each result means, are in the <a href="https://github.com/Awointa/farmledge-verify#verify-a-bundle-yourself-with-python-and-nothing-else">README</a>. The script is byte for byte the protocol's own <a href="https://github.com/Awointa/farmledge-protocol/blob/3f731e82b28523f0ac2b247a026c1ebf67df0a83/scripts/verify_proof.py">scripts/verify_proof.py</a> (pinned by SHA-256), and is printed in full in the protocol's public specification, <a href="https://github.com/Awointa/farmledge-protocol/blob/3f731e82b28523f0ac2b247a026c1ebf67df0a83/docs/events.md#farmer-proofs">docs/events.md</a>.</p>
     </section>
   </main>
 
