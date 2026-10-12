@@ -10,7 +10,7 @@ import { isWarehouseId, warehouseRecord } from './warehouse.js';
 import { VERIFIED, render } from './render.js';
 import { mount } from './dom.js';
 import { canScan, scanCamera } from './qr.js';
-import { compareSlip, slipFromFragment } from './slip.js';
+import { compareSlip, resolverUrl, slipFromFragment } from './slip.js';
 
 const ctx = Object.freeze({ rpcUrl: NETWORK.rpcUrl, contractId: NETWORK.contractId });
 const $ = (id) => document.getElementById(id);
@@ -28,7 +28,7 @@ async function check(text, source) {
   status('');
   const input = classifyInput(text);
   if (input.kind !== 'bundle') {
-    show({ ...input, source });
+    show({ ...input, source, slip });
     out.scrollIntoView({ block: 'start', behavior: 'smooth' });
     return;
   }
@@ -172,10 +172,10 @@ async function fromLink() {
 async function fromToken(token) {
   const wait = (reason) => show({ kind: 'slip-waiting', slip, reason });
   if (!NETWORK.proofApi) { wait('This page has no Farmledge address set to fetch the bundle the link names, so nothing was fetched.'); return; }
-  const url = `${NETWORK.proofApi}/proofs/${encodeURIComponent(token)}`;
+  const url = resolverUrl(NETWORK.proofApi, token);
   status('Fetching the bundle from Farmledge…');
   const ctl = new AbortController();
-  const timer = setTimeout(() => ctl.abort(), 15_000);
+  const timer = setTimeout(() => ctl.abort(), NETWORK.proofTimeoutMs);
   let res, text;
   try {
     res = await fetch(url, { signal: ctl.signal, credentials: 'omit', referrerPolicy: 'no-referrer', cache: 'no-store' });
@@ -186,9 +186,9 @@ async function fromToken(token) {
     clearTimeout(timer);
     status('');
   }
-  if (res === null) { wait('The bundle could not be fetched from Farmledge: no answer.'); return; }
+  if (res === null) { wait(ctl.signal.aborted ? `Farmledge did not answer within ${NETWORK.proofTimeoutMs / 1000} seconds, so nothing was fetched.` : 'The bundle could not be fetched from Farmledge: no answer.'); return; }
   if (res.status === 404) { wait('Farmledge has no proof for the token in this link.'); return; }
-  if (res.status === 429) { wait('Farmledge is refusing requests for a minute: too many were made. Reload the page shortly.'); return; }
+  if (res.status === 429) { wait('Farmledge is refusing requests: too many were made. Reload the page shortly.'); return; }
   if (!res.ok) { wait(`The bundle could not be fetched from Farmledge (HTTP ${res.status}).`); return; }
   $('bundle').value = text;
   check(text, { how: 'token', detail: url });

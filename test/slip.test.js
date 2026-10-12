@@ -7,7 +7,7 @@ import assert from 'node:assert/strict';
 import { NETWORK } from '../src/config.js';
 import { OUTCOMES, parseJson } from '../src/verify.js';
 import { render } from '../src/render.js';
-import { compareSlip, formatRef, leafRef, parseRef, slipFromFragment } from '../src/slip.js';
+import { compareSlip, formatRef, leafRef, parseRef, resolverUrl, slipFromFragment } from '../src/slip.js';
 import { fixtures, runBrowser } from './support/fixtures.js';
 
 const text = (n) => (typeof n === 'string' || typeof n === 'number' || typeof n === 'bigint' ? String(n) : n.children.map(text).join(''));
@@ -80,7 +80,7 @@ test('verified and the slip matches: verified, with the reference at the top', a
   assert.equal(node.children[0].props['data-slip'], 'match', 'the reference comes first');
   assert.equal(text(byClass(node, 'ref-big')[0]), 'FIXTURE_WH.101');
   assert.equal(byClass(node, 'icon-check').length, 1);
-  assert.match(text(node), /Check it against the one printed beneath the QR/);
+  assert.match(text(node), /Check this matches the deposit number printed on the slip\.It is the deposit your slip's QR code names\. This page cannot see the paper/);
 });
 
 test('verified but another deposit: a red failure that says both things, and no claims', async () => {
@@ -124,18 +124,18 @@ test('the reference is at the top of every result, whatever the outcome', async 
     const node = render(await viewFor(name), NETWORK);
     assert.ok(node.children[0].props['data-slip'] !== undefined, name);
     assert.equal(text(byClass(node, 'ref-big')[0]), formatRef('FIXTURE_WH', parseJson(fixtures().find((f) => f.name === name).bundleText).leaf.deposit_no), name);
-    assert.match(text(node), /compare this with the reference printed beneath its QR code: this page did not see it/, name);
+    assert.match(text(node), /Check this matches the deposit number printed on the slip\.No slip reference came with this bundle, so this page could not compare it with a slip\. Only your own comparison with the slip guards against a swapped bundle\./, name);
   }
 });
 
 test('a missing or unreadable slip reference is said, not hidden', async () => {
   const missing = render(await viewFor('valid', `#p=${TOKEN}`), NETWORK);
   assert.equal(attr(missing, 'data-slip'), 'missing');
-  assert.match(text(missing), /The link carried no slip reference, so this page could not compare this proof with your slip\. Compare the reference above with the one printed beneath the QR code on your slip yourself\./);
+  assert.match(text(missing), /The link carried no slip reference, so this page could not compare this proof with your slip\. Only your own comparison with the slip guards against a swapped bundle\./);
   assert.equal(attr(missing, 'data-state'), 'OK');
   const bad = render(await viewFor('valid', `#p=${TOKEN}&d=FIXTURE_WH.0101`), NETWORK);
   assert.equal(attr(bad, 'data-slip'), 'unreadable');
-  assert.match(text(bad), /The link's slip reference could not be read \(FIXTURE_WH\.0101 is not in the printed form/);
+  assert.match(text(bad), /The link's slip reference could not be read \(FIXTURE_WH\.0101 is not in the form WAREHOUSE\.NUMBER\), so this page could not compare this proof with your slip\. Only your own comparison/);
 });
 
 test('a slip link with nothing fetched shows the slip, and nothing like a result', () => {
@@ -150,4 +150,20 @@ test("the slip check is not a verifier result: the shared codes are unchanged", 
   assert.equal('SLIP_MISMATCH' in OUTCOMES, false);
   assert.deepEqual(Object.keys(OUTCOMES).sort(), ['BAD_BUNDLE', 'COULD_NOT_CHECK', 'DAY_IN_FUTURE', 'DAY_ROOT_DIFFERS', 'DAY_ROOT_EXPIRED',
     'HEAD_MISMATCH', 'NOT_YET_ANCHORED', 'NO_HEAD', 'OK', 'PROOF_DOES_NOT_FIT', 'WRONG_NETWORK'].sort());
+});
+
+test('the resolver is sent the token and nothing else: never the slip reference', () => {
+  assert.equal(resolverUrl('https://api.example', TOKEN), `https://api.example/proofs/${TOKEN}`);
+  assert.equal(resolverUrl('https://api.example/', TOKEN), `https://api.example/proofs/${TOKEN}`);
+  for (const bad of ['../x', `${TOKEN}?d=W.1`, `${TOKEN}&d=W.1`, `${TOKEN}#d`, '', null]) assert.throws(() => resolverUrl('https://api.example', bad), String(bad));
+});
+
+test('a slip heads every view, even when what arrived is not a bundle', () => {
+  const slip = slipFromFragment(`#p=${TOKEN}&d=FIXTURE_WH.101`);
+  for (const view of [{ kind: 'unreadable-bundle' }, { kind: 'unknown' }, { kind: 'capture', depositId: 'x' }, { kind: 'checking' }]) {
+    const node = render({ ...view, slip }, NETWORK);
+    assert.equal(node.children[0].props['data-slip'], 'waiting', view.kind);
+    assert.match(text(node.children[0]), /FIXTURE_WH\.101Check this matches the deposit number printed on the slip\./, view.kind);
+  }
+  assert.equal(render({ kind: 'unknown' }, NETWORK).children[0].props['data-slip'], undefined);
 });

@@ -60,7 +60,8 @@ test('every outcome has its own headline, and only the two verified codes look v
 test('"could not check" can never render as anything like verified', async () => {
   for (const fx of fixtures().filter((f) => f.chain.fail)) {
     const node = render(await viewFor(fx.name), NETWORK);
-    const t = text(node);
+    // The slip instruction is the reader's check, not a result, and is on every screen.
+    const t = text(node).replace('Check this matches the deposit number printed on the slip.', '');
     assert.equal(tone(node), 'nocheck', fx.name);
     assert.match(headline(node), /^Could not check/, fx.name);
     assert.match(t, /This is not a result/, fx.name);
@@ -140,7 +141,7 @@ test('the slip QR forms are explained, not checked', () => {
   const capture = text(render({ kind: 'capture', depositId: 'abc' }, NETWORK));
   assert.match(capture, /This is a capture receipt from a tablet that had not yet synced\. It proves nothing\. Nothing has been anchored for this deposit yet\./);
   const leaf = render({ kind: 'leaf', leaf: { warehouse_id: 'W', deposit_no: 5n, kg: 100n, index: null, owner: 'GABC' } }, NETWORK);
-  assert.match(text(leaf), /This is the deposit record as Farmledge recorded it\. It is a claim, not a proof\. To check it you need the proof bundle for this deposit\./);
+  assert.match(text(leaf), /This is a deposit record in the form Farmledge uses\. It is a claim, not a proof\. To check it you need the proof bundle for this deposit\./);
   assert.match(text(leaf), /unverified/);
   for (const n of [render({ kind: 'capture', depositId: 'abc' }, NETWORK), leaf]) {
     assert.equal(byClass(n, 'icon-check').length, 0);

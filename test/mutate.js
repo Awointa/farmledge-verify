@@ -71,7 +71,7 @@ export const MUTATIONS = [
   ['warehouse: no head', 'src/warehouse.js', 'if (head === null) return { warehouseId, chainDay: today, head: null, days: [], gaps: [] };', ''],
   // --- src/render.js: what the page shows ---
   ['render: code and flag must agree', 'src/render.js', "const consistent = VERIFIED.includes(view.result.code) === (view.result.verified === true);", 'const consistent = true;'],
-  ['render: honesty beside the tick', 'src/render.js', 'verified ? [honesty(r), deposit(view.leaf)', 'verified ? [deposit(view.leaf)'],
+  ['render: honesty beside the tick', 'src/render.js', 'verified && !mismatch ? [honesty(r), deposit(view.leaf)', 'verified && !mismatch ? [deposit(view.leaf)'],
   ['render: recovery banner', 'src/render.js', "claims?.status === 'ok' && claims.data.summary.recovery ? recoveryBanner() : null,", ''],
   ['render: could-not-check tone', 'src/render.js', "case 'COULD_NOT_CHECK': default: return { tone: 'nocheck', icon: 'question',", "case 'COULD_NOT_CHECK': default: return { tone: 'verified', icon: 'check',"],
   ['render: pending is not verified', 'src/render.js', "case 'NOT_YET_ANCHORED': return { tone: 'pending', icon: 'clock',", "case 'NOT_YET_ANCHORED': return { tone: 'verified', icon: 'check',"],
@@ -91,6 +91,10 @@ export const MUTATIONS = [
   ['render: no claims for another lot', 'src/render.js', 'const claims = verified && !mismatch ? view.claims : null;', 'const claims = verified ? view.claims : null;'],
   ['render: reference on every result', 'src/render.js', '    refPanel(view, verified, check),\n', ''],
   ['render: missing reference said', 'src/render.js', "!slip.ref ? 'missing' :", "!slip.ref ? 'none' :"],
+  ['slip: resolver gets a token only', 'src/slip.js', "if (!isToken(token)) throw new Error('not a proof token');", ''],
+  // --- the copy: docs/claims.md is enforced (test/copy-claims.test.js) ---
+  ['copy: the old SMS claim comes back', 'src/render.js', 'and no bundle has been delivered to a farmer.', 'and within 24 hours the farmer is sent the proof bundle by SMS link.'],
+  ['copy: a nightly anchor is promised', 'src/render.js', 'Check again after the warehouse next anchors its books:', "Check again after the warehouse's next nightly anchor:"],
   // --- src/input.js ---
   ['input: capture receipts recognised', 'src/input.js', "if (m) return { kind: 'capture', depositId: m[1] };", ''],
   ['input: slip leaf fields only', 'src/input.js', 'for (const k of LEAF_FIELDS) if (k in v) leaf[k] = v[k];', 'Object.assign(leaf, v);'],

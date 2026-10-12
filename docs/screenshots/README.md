@@ -1,8 +1,8 @@
 # Every state of the page
 
-> ## ⚠ 01–29 AND 31–36 ARE SYNTHETIC. ONLY 00 AND 30 ARE REAL TESTNET ANCHORS.
+> ## ⚠ 01–29 AND 31–40 ARE SYNTHETIC. ONLY 00 AND 30 ARE REAL TESTNET ANCHORS.
 >
-> Screenshots **01–29** and **31–36** (`*-synthetic-*.png`) show the page answering from
+> Screenshots **01–29** and **31–40** (`*-synthetic-*.png`) show the page answering from
 > **synthetic test data**: fixture chains served to the unmodified page by the
 > test harness in place of the RPC. Nothing in them was anchored on any
 > network. Their warehouse (`FIXTURE_WH`), lots, receipts, lender, dates,
@@ -167,3 +167,19 @@ and watermark are added by the test harness.
 ## 36 · SYNTHETIC · A slip link with no reference: verified, and said to be uncompared with the slip
 
 ![36-synthetic-slip-link-no-reference.png](36-synthetic-slip-link-no-reference.png)
+
+## 37 · SYNTHETIC · A slip token that returns a valid bundle for another deposit: SLIP_MISMATCH, after verifying
+
+![37-synthetic-slip-token-other-deposit.png](37-synthetic-slip-token-other-deposit.png)
+
+## 38 · SYNTHETIC · A slip token answered with something that is not JSON: nothing checked, the slip kept
+
+![38-synthetic-slip-token-malformed-json.png](38-synthetic-slip-token-malformed-json.png)
+
+## 39 · SYNTHETIC · A slip token Farmledge does not answer in time: nothing checked
+
+![39-synthetic-slip-token-timeout.png](39-synthetic-slip-token-timeout.png)
+
+## 40 · SYNTHETIC · A slip token Farmledge does not know (404): nothing checked
+
+![40-synthetic-slip-token-not-found.png](40-synthetic-slip-token-not-found.png)

@@ -16,4 +16,5 @@ export const NETWORK = Object.freeze({
   // slip link then says it cannot fetch, and the bundle can still be pasted
   // or uploaded and compared with the slip.
   proofApi: null,
+  proofTimeoutMs: 15_000,
 });

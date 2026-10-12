@@ -4,9 +4,8 @@ Check a Farmledge proof bundle against the Stellar ledger, without trusting
 Farmledge.
 
 A **proof bundle** is Farmledge's *claim* that a deposit was in a warehouse's
-books on a given day. It can reach you any way at all: from the farmer, by
-SMS link, or downloaded from a Farmledge server. That does not weaken the
-check, because the check reads only the chain. If the bundle's contents do
+books on a given day. Whoever hands it to you, and however, the check does
+not depend on them, because it reads only the chain. If the bundle's contents do
 not hash into a root that the warehouse committed on Stellar, and that root
 is not chained to the head stored on chain today, the check fails. Farmledge
 cannot make a false bundle pass, and cannot have rewritten a day's books
@@ -73,7 +72,7 @@ You need Python 3.8 or later and an internet connection. Nothing to install.
    |---|---|
    | `OK` | **Verified.** The deposit is in the warehouse's books for that day, as committed on chain. |
    | `DAY_ROOT_EXPIRED` | **Verified**, through the chain of daily commitments alone. A day's own root leaves the chain after 30 days, by design. |
-   | `NOT_YET_ANCHORED` | **Not a failure.** The warehouse has not committed that day yet. Check again after the next nightly anchor. |
+   | `NOT_YET_ANCHORED` | **Not a failure.** The warehouse has not committed that day yet. Check again after it next anchors its books. |
    | `DAY_ROOT_DIFFERS` | **Fails.** The books committed for that day are not the ones in this bundle: altered or forged. |
    | `HEAD_MISMATCH` | **Fails.** The bundle's chain of days does not reach the commitment on chain. |
    | `PROOF_DOES_NOT_FIT` | **Fails.** The proof cannot belong to that day's books. |
@@ -110,10 +109,10 @@ You need Python 3.8 or later and an internet connection. Nothing to install.
    4000 kg, lot 1, kind 0, in TESTNET_EXAMPLE_WH's books on day 20737
    ```
 
-   A reprinted slip prints the same deposit beneath its QR code as one
-   reference, `TESTNET_EXAMPLE_WH.1`: the warehouse, a dot, the lot number.
+   As a slip reference (the form `d=` uses, below) that deposit is
+   `TESTNET_EXAMPLE_WH.1`: the warehouse, a dot, the lot number.
    Check that the warehouse and the lot number are both the slip's (a
-   lot number alone is not enough: other warehouses use the same numbers), and that
+   lot number alone is not enough: another warehouse can have the same number), and that
    it says `kind 0`, a deposit. Any other kind is a dispatch or an
    end-of-day balance of that lot, not the deposit on the slip. If any of
    the three differs, the proof is valid but is not for your slip: do not
@@ -129,7 +128,7 @@ been changed since.
 It does **not** show that the grain is physically in the warehouse, that
 the weight was measured correctly, that the grade is accurate, or that the
 people behind the addresses are who they say they are. Those rest on the
-warehouse, its audits and your own diligence. A deposit proof is also not
+warehouse and on your own diligence. A deposit proof is also not
 the lot's *current* state: whether the lot has since been pledged,
 released or revoked is a separate chain read, which the verification page
 does and the script does not.
@@ -140,7 +139,7 @@ does and the script does not.
 no server, no runtime dependency. It accepts a bundle pasted, uploaded,
 scanned from a QR code, carried in a link (`#bundle=<base64url>`, never sent
 to any server), fetched from a URL (`?src=https://…`), or named by a
-reprinted slip's token (`#p=…&d=…`, below), and always says which. It recognises the two QR forms printed on counter slips today (a
+reprinted slip's token (`#p=…&d=…`, below), and always says which. It recognises the two QR forms farmledge-app's counter slip defines (a
 tablet capture receipt, and the post-sync leaf) and explains them; neither
 is checked, because neither carries a proof.
 
@@ -163,17 +162,26 @@ is checked, because neither carries a proof.
 
 - **The slip check (page only).** See below.
 
+- **Every sentence about Farmledge is checked.** Whatever the page says a
+  warehouse or Farmledge does must be true of the deployed system today.
+  [`docs/claims.md`](docs/claims.md) lists each such sentence with its
+  evidence, and `test/copy-claims.test.js` fails on any page copy not
+  listed there, or on any change to the copy until the list is re-checked.
+
 Screenshots of every state: [`docs/screenshots/`](docs/screenshots/).
 
 ### The slip check: a page-level check that `verify_proof.py` cannot make
 
-A reprinted slip's QR links here as
+farmledge-app's reprinted slip (API decision D58) is to link here as
 
 ```
 https://awointa.github.io/farmledge-verify/#p=<token>&d=<warehouse_id>.<deposit_no>
 ```
 
-(farmledge-app, API decision D58). `p` is the token of the deposit's proof
+It is built on farmledge-app branch `feat/app-proof-slip` and is **not
+deployed**: no slip carrying this link has been printed by a deployed
+system. The reprint is to print the same reference beneath its QR code, in
+the same form and in monospace. `p` is the token of the deposit's proof
 bundle, fetched from `<proofApi>/proofs/<token>` (farmledge-app
 `GET /proofs/:token`, `src/http/routes/pledges.ts`), where `proofApi` is
 page configuration in `src/config.js`, never taken from the link. **It is

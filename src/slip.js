@@ -58,6 +58,16 @@ export function compareSlip(slipRef, leaf) {
 export const isToken = (s) => typeof s === 'string' && TOKEN.test(s);
 
 /**
+ * The address a token is fetched from. The token only: the slip reference
+ * never leaves the page, so a dishonest server cannot see which deposit the
+ * slip names and answer with a bundle made to fit.
+ */
+export function resolverUrl(proofApi, token) {
+  if (!isToken(token)) throw new Error('not a proof token');
+  return `${proofApi.replace(/\/+$/, '')}/proofs/${token}`;
+}
+
+/**
  * What a link's fragment says about a slip: { token, tokenBad, ref, refText, refBad }.
  * A reference that is present but unreadable is reported, never dropped.
  */
