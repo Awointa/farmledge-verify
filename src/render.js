@@ -299,7 +299,7 @@ function leafView(v) {
 function howToGetBundle() {
   return h('section', { class: 'facts' },
     h('h3', null, 'How to get the proof bundle'),
-    h('p', null, 'Farmledge has no way to give you one yet. It does not send proof bundles to farmers today: its text-message sending is a placeholder that only writes to a log, and no bundle has been delivered to a farmer. When a bundle for this deposit does reach you, by any route, paste it, upload it or scan it here.'));
+    h('p', null, 'Farmledge has no way to give you one yet. Its text-message sending is a placeholder that only writes to a log. When a bundle for this deposit does reach you, by any route, paste it, upload it or scan it here.'));
 }
 
 function plainView(state, tone, iconName, headline, body) {

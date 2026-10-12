@@ -21,7 +21,7 @@ deployed system, not against the code or a plan. Update its evidence and
 date, or rewrite the sentence. Then set the new hash, which the failing test
 prints.
 
-copy-sha256: 7430799b5dd4436c67102e85c635ed3f3d6e1ba511d4fdd63da52466390fbdc6
+copy-sha256: f9a5e163002c3f56421ca02730f342f86beaa42048e6b4ca582161dde721b657
 
 "The deployed system", as of the last check:
 
@@ -38,7 +38,7 @@ copy-sha256: 7430799b5dd4436c67102e85c635ed3f3d6e1ba511d4fdd63da52466390fbdc6
   - `SMS_GATEWAY` accepts only `mock` (`src/config/schema.ts:137`, main
     `cd0e2e8`).
   - The operator reports 6 anchors and 0 proof bundles delivered on Testnet
-    (2026-10-12).
+    (2026-10-12). This is context only: no sentence on the page rests on it.
 - **This page:** https://awointa.github.io/farmledge-verify/, built by
   `scripts/build-site.sh`. `NETWORK.proofApi` is null.
 
@@ -47,7 +47,7 @@ copy-sha256: 7430799b5dd4436c67102e85c635ed3f3d6e1ba511d4fdd63da52466390fbdc6
 ### Farmledge does not deliver proof bundles today
 
 > Farmledge has no way to give you one yet.
-> It does not send proof bundles to farmers today: its text-message sending is a placeholder that only writes to a log, and no bundle has been delivered to a farmer.
+> Its text-message sending is a placeholder that only writes to a log.
 
 - **Where:** `src/render.js` `howToGetBundle`, under a capture receipt and a
   slip leaf. This replaced "the farmer is sent the proof bundle for this
@@ -57,7 +57,9 @@ copy-sha256: 7430799b5dd4436c67102e85c635ed3f3d6e1ba511d4fdd63da52466390fbdc6
     `src/config/schema.ts:137`).
   - There is no deployed API to serve a bundle link: no deploy workflow, and
     the link base is `localhost`.
-  - The operator reports 0 proof bundles delivered on Testnet (2026-10-12).
+  - Nothing here rests on anyone's word: an earlier version also said no
+    bundle had been delivered, which only the operator could vouch for, and
+    was cut (2026-10-12).
 - **False when:** a real SMS gateway is configured and the proofs job has
   delivered a bundle on the deployed system. Then say how, and how soon.
 - **Checked:** 2026-10-12

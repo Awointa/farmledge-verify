@@ -197,8 +197,9 @@ names, in the form the slip prints beneath the QR: `TESTNET_EXAMPLE_WH.1`.
   leaf: every other field is already bound by the proof, and a person can
   compare a reference with paper, never a hash.
 - **A deposit record.** The slip names a deposit, so the leaf must also be
-  kind 0. The same lot's dispatch or balance record carries the same
-  reference and does not match.
+  kind 0. The same lot's dispatch and end-of-day balance records carry the
+  same `(warehouse_id, deposit_no)`, so without this rule a valid dispatch
+  proof would satisfy a deposit slip. They do not match.
 - **After verification, never instead of it.** The bundle is verified
   first. If that fails, the failure is shown, whatever the slip says: it is
   more fundamental. Only a verified bundle for a different deposit than
