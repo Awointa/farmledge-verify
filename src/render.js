@@ -254,7 +254,7 @@ function leafView(v) {
 function howToGetBundle() {
   return h('section', { class: 'facts' },
     h('h3', null, 'How to get the proof bundle'),
-    h('p', null, "The warehouse's books are anchored on Stellar each night. Within 24 hours after that, the farmer is sent the proof bundle for this deposit by SMS link. Any warehouse can also print it as a QR code on request. Scan or paste that bundle here."));
+    h('p', null, "The warehouse's books are anchored on Stellar each night. Within 24 hours after that, the farmer is sent the proof bundle for this deposit by SMS link. Scan or paste that bundle here."));
 }
 
 function plainView(state, tone, iconName, headline, body) {
