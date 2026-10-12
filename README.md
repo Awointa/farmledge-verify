@@ -50,14 +50,16 @@ You need Python 3.8 or later and an internet connection. Nothing to install.
    deposit.** If the contract is anything else, stop: the bundle is not
    checkable against Farmledge's books.
 
-4. **Run it, choosing the RPC endpoint yourself:**
+4. **Run it. `--rpc` is required: you choose the endpoint.**
 
    ```
    python3 verify_proof.py bundle.json --rpc https://soroban-testnet.stellar.org
    ```
 
-   Always pass `--rpc`. The RPC endpoint is the one thing the check trusts,
-   and a forged bundle could name a server that lies. For mainnet, pick a
+   The RPC endpoint is the one thing the check trusts. The bundle's own
+   `rpc` field is shown as a suggestion ("the bundle suggested …, not
+   used") and never dialled, so a forged bundle naming a server that lies
+   is visible, not obeyed. For mainnet, pick a
    provider from
    [Stellar's RPC provider list](https://developers.stellar.org/docs/data/apis/rpc/providers),
    or run your own.
@@ -76,8 +78,25 @@ You need Python 3.8 or later and an internet connection. Nothing to install.
    | `NO_HEAD` | **Fails.** That warehouse has never committed anything on chain. |
    | `BAD_BUNDLE` | Not a proof bundle. |
    | `COULD_NOT_CHECK` | **No result.** The chain could not be read. This says nothing about the bundle; try again or try another RPC. |
+   | `NO_RPC` | Nothing was checked: `--rpc` is missing. |
 
-   The exit status is 0 only for the two verified results.
+   Exactly two results count as verified, here and on the page: `OK` and
+   `DAY_ROOT_EXPIRED`. The exit status is 0 for those two only.
+   `NOT_YET_ANCHORED` is not verified: it means nothing has been committed
+   for that day yet, so the slip cannot be checked either way.
+
+   **Why `DAY_ROOT_EXPIRED` is enough.** The head stored on chain today is a
+   SHA-256 hash chain over every day the warehouse has anchored (day, leaf
+   count, root), and the contract only ever appends to it. A root that,
+   followed by the later days, recomputes exactly to today's head is
+   therefore the root committed for that day: producing a different one that
+   does would mean breaking SHA-256.
+
+   **Archived entries.** Stellar archives an entry whose rent has lapsed.
+   RPC still returns an archived entry, with its value, and that value is
+   what is read and compared: archived is not the same as missing, and not
+   the same as invalid. (stellar-rpc returns archived entries with
+   `liveUntilLedgerSeq` 0; see `cmd/stellar-rpc/internal/ledgerentries/main.go`.)
 
 ### What a verified result shows, and what it does not
 

@@ -77,10 +77,10 @@ export function parseJson(text) {
 const isObject = (x) => x !== null && typeof x === 'object' && !Array.isArray(x);
 const isInt = (x) => typeof x === 'bigint';
 
-function result(code, detail, facts) {
+function result(code, detail, facts, endpoint) {
   // A check that could not run has no facts to show: nothing that could pass for a result.
   const shown = code === 'COULD_NOT_CHECK' ? {} : { ...facts };
-  return Object.freeze({ code, verified: OUTCOMES[code].verified, detail: detail ?? '', facts: Object.freeze(shown) });
+  return Object.freeze({ code, verified: OUTCOMES[code].verified, detail: detail ?? '', facts: Object.freeze(shown), endpoint });
 }
 
 /**
@@ -90,25 +90,34 @@ function result(code, detail, facts) {
  */
 export async function verifyBundle(b, ctx) {
   const facts = { rpcUrl: ctx.rpcUrl };
+  // The endpoint is the page's configuration. The bundle's rpc is a
+  // suggestion from whoever made it: shown beside the one used, never dialled.
+  const suggested = isObject(b) && typeof b.rpc === 'string' ? b.rpc : null;
+  const endpoint = Object.freeze({ used: ctx.rpcUrl, suggested });
   try {
-    if (!isObject(b)) return result('BAD_BUNDLE', 'not a JSON object', facts);
+    if (!isObject(b)) return result('BAD_BUNDLE', 'not a JSON object', facts, endpoint);
     if (b.contract_id !== ctx.contractId) {
-      return result('WRONG_NETWORK', `the bundle is for contract ${String(b.contract_id)}; this page checks ${ctx.contractId}`, facts);
+      return result('WRONG_NETWORK', `the bundle is for contract ${String(b.contract_id)}; this page checks ${ctx.contractId}`, facts, endpoint);
     }
-    return result(await check(b, ctx, facts), '', facts);
+    return result(await check(b, ctx, facts), '', facts, endpoint);
   } catch (e) {
-    if (e instanceof Outcome) return result(e.code, e.message, facts);
+    if (e instanceof Outcome) return result(e.code, e.message, facts, endpoint);
     // Anything unforeseen, above all in what the chain returned: no result.
-    return result('COULD_NOT_CHECK', e.message, {});
+    return result('COULD_NOT_CHECK', e.message, {}, endpoint);
   }
 }
 
 async function check(b, ctx, facts) {
   let leaf, proof, day, n, idx, h, prev, later, wh;
   const laterDays = 'later_days' in b ? b.later_days : [];
+  // THE SOLE SHAPE GATE. This try block is the only thing standing between a
+  // malformed bundle and the chain reads: every BAD_BUNDLE fixture (wrong
+  // shape, null later_days, float or boolean integers, bad strkeys, short
+  // hashes, out-of-range numbers, invalid Unicode) is caught here, as a
+  // BadInput or a TypeError. verify_proof.py has an explicit shape check
+  // first; here a wrong shape fails a line or two later with the same
+  // outcome. Do not narrow the catch below without adding that check back.
   try {
-    // verify_proof.py checks the bundle's shape first; here a wrong shape
-    // fails as a TypeError or a missing integer below, with the same outcome.
     leaf = b.leaf;
     proof = b.proof.map(fromHex);
     [day, n, idx] = [leaf.day, b.day_leaves, leaf.index];

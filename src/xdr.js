@@ -75,6 +75,11 @@ export function concat(...parts) {
   return out;
 }
 
+export function compareBytes(a, b) {
+  for (let i = 0; i < Math.min(a.length, b.length); i++) if (a[i] !== b[i]) return a[i] - b[i];
+  return a.length - b.length;
+}
+
 export function equal(a, b) {
   if (a.length !== b.length) return false;
   for (let i = 0; i < a.length; i++) if (a[i] !== b[i]) return false;
@@ -124,8 +129,8 @@ export function sv(t, v) {
     case 'symbol': return concat(u32(15), opaque(utf8(v)));
     case 'address': return concat(u32(18), address(v));
     case 'vec': return concat(u32(16), u32(1), u32(v.length), ...v);
-    case 'map': { // keys sorted, as the host requires
-      const keys = Object.keys(v).sort();
+    case 'map': { // keys sorted by their bytes, as the host requires (and Python's sorted() on str)
+      const keys = Object.keys(v).sort((a, b) => compareBytes(utf8(a), utf8(b)));
       return concat(u32(17), u32(1), u32(keys.length), ...keys.map((k) => concat(sv('symbol', k), v[k])));
     }
     default: throw new Error(`ScVal type ${t}`);

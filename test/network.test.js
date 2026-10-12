@@ -44,5 +44,6 @@ test("the bundle's rpc is ignored: only the page's RPC is read", async () => {
     assert.equal(r.code, 'OK');
     assert.equal(liar.state.calls, 0);
     assert.equal(r.facts.rpcUrl, honest.url);
+    assert.deepEqual({ ...r.endpoint }, { used: honest.url, suggested: liar.url }, 'the suggestion is shown, not obeyed');
   } finally { await liar.close(); await honest.close(); }
 });
