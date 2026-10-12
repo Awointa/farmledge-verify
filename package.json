@@ -1,0 +1,19 @@
+{
+  "name": "farmledge-verify",
+  "private": true,
+  "license": "Apache-2.0",
+  "type": "module",
+  "description": "Check a Farmledge proof bundle against the Stellar ledger, in the browser, without trusting Farmledge.",
+  "scripts": {
+    "test": "node --test --test-timeout=120000 'test/*.test.js'",
+    "test:live": "LIVE=1 node --test test/live.test.js",
+    "mutate": "node test/mutate.js",
+    "fixtures": "node test/make-fixtures.js"
+  },
+  "devDependencies": {
+    "@stellar/stellar-base": "15.0.0"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}

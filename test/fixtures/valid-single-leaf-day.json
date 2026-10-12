@@ -1,0 +1,24 @@
+{
+  "name": "valid-single-leaf-day",
+  "description": "a one-leaf day: empty proof",
+  "expect": "OK",
+  "chain": {
+    "closeTime": 1791766800,
+    "latestLedger": 5100000,
+    "entries": [
+      {
+        "key": "AAAABgAAAAFt6YO0Sy6carh6a+tStm0ft6stfcrBaE2orZGXclInygAAABAAAAABAAAAAgAAAA8AAAAESGVhZAAAAA8AAAAKRklYVFVSRV9XSAAAAAAAAQ==",
+        "xdr": "AAAABgAAAAAAAAABbemDtEsunGq4emvrUrZtH7erLX3KwWhNqK2Rl3JSJ8oAAAAQAAAAAQAAAAIAAAAPAAAABEhlYWQAAAAPAAAACkZJWFRVUkVfV0gAAAAAAAEAAAAQAAAAAQAAAAIAAAADAABQ3AAAAA0AAAAg82Sx08x474KPkapmlYMhWMjDKkDf8qfWw1OslyM95S8=",
+        "lastModifiedLedgerSeq": 5000000,
+        "liveUntilLedgerSeq": 9000000
+      },
+      {
+        "key": "AAAABgAAAAFt6YO0Sy6carh6a+tStm0ft6stfcrBaE2orZGXclInygAAABAAAAABAAAAAwAAAA8AAAAHRGF5Um9vdAAAAAAPAAAACkZJWFRVUkVfV0gAAAAAAAMAAFDcAAAAAA==",
+        "xdr": "AAAABgAAAAAAAAABbemDtEsunGq4emvrUrZtH7erLX3KwWhNqK2Rl3JSJ8oAAAAQAAAAAQAAAAMAAAAPAAAAB0RheVJvb3QAAAAADwAAAApGSVhUVVJFX1dIAAAAAAADAABQ3AAAAAAAAAAQAAAAAQAAAAIAAAANAAAAIFKfcAtZvIwPG3jCJqmufR0s6mad1vDNmFGBumkLuyVoAAAAAwAAAAE=",
+        "lastModifiedLedgerSeq": 5000000,
+        "liveUntilLedgerSeq": 9000000
+      }
+    ]
+  },
+  "bundleText": "{\n  \"rpc\": \"https://rpc.example.invalid\",\n  \"contract_id\": \"CBW6TA5UJMXJY2VYPJV6WUVWNUP3PKZNPXFMC2CNVCWZDF3SKIT4UAIN\",\n  \"leaf\": {\n    \"version\": 1,\n    \"kind\": 0,\n    \"warehouse_id\": \"FIXTURE_WH\",\n    \"day\": 20700,\n    \"index\": 0,\n    \"deposit_no\": 100,\n    \"deposit_id\": \"FIXTURE-LOT-100\",\n    \"receipt_id\": 0,\n    \"receipt_version\": 0,\n    \"owner\": \"GALEKIVUALWUHOUN2FOJCCNTGR6NDWO4MNUYFBUBCR2HQTM6D5FIECXX\",\n    \"commodity\": \"MAIZE_WHITE\",\n    \"grade\": \"GRADE_1\",\n    \"kg\": 4000,\n    \"weight_source\": \"Scale\",\n    \"bags\": 40,\n    \"moisture_bps\": 1250,\n    \"custodian\": \"GDVKP5225RBIPLQS6CKBPTFKUTXHIU7BURNHGFVPM2L3RKZVNAUB445J\",\n    \"verifier\": \"GDE46EEN37PDYYALVGLYJ7CRYK5UEXXZSRAPLWYU5Y4RM2FG6I35PZ4G\",\n    \"deposited_at\": 1788516000,\n    \"at\": 1788516000,\n    \"salt\": \"b657bcc3e7fad71f42890302b754b5ac65b8b61344275e899d560812c8f47e4d\"\n  },\n  \"proof\": [],\n  \"day_leaves\": 1,\n  \"prev_head\": \"cac8815f969ab1f2617ec6381899afa1434b10ce4c16a1c989af78b6ff918a76\",\n  \"later_days\": []\n}"
+}

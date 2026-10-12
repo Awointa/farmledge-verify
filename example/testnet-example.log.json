@@ -1,0 +1,23 @@
+{
+  "warehouse_id": "TESTNET_EXAMPLE_WH",
+  "day": 20737,
+  "leaves": 4,
+  "root": "da113703865997d74167d229f169b7d426d4a51147b7b3b91c45bea44bf2bc20",
+  "steps": [
+    {
+      "anchor": "f86c8e5407f8995ac2df782da8858bea70ae2bdbd0398b9dd10c2134b8afcf25"
+    },
+    {
+      "minted": 72
+    },
+    {
+      "locked": 73,
+      "kg": 1200,
+      "due_date": 1796947200
+    },
+    {
+      "exited": 74,
+      "kg": 400
+    }
+  ]
+}

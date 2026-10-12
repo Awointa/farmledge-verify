@@ -1,0 +1,24 @@
+{
+  "name": "valid-every-index",
+  "description": "genuine bundle for the last leaf, beside the padding",
+  "expect": "OK",
+  "chain": {
+    "closeTime": 1791766800,
+    "latestLedger": 5100000,
+    "entries": [
+      {
+        "key": "AAAABgAAAAFt6YO0Sy6carh6a+tStm0ft6stfcrBaE2orZGXclInygAAABAAAAABAAAAAgAAAA8AAAAESGVhZAAAAA8AAAAKRklYVFVSRV9XSAAAAAAAAQ==",
+        "xdr": "AAAABgAAAAAAAAABbemDtEsunGq4emvrUrZtH7erLX3KwWhNqK2Rl3JSJ8oAAAAQAAAAAQAAAAIAAAAPAAAABEhlYWQAAAAPAAAACkZJWFRVUkVfV0gAAAAAAAEAAAAQAAAAAQAAAAIAAAADAABQ3AAAAA0AAAAgOhHr4Z3mM3KRk+DRn4KghjnKSLZm7yKLoS95lUOQTFI=",
+        "lastModifiedLedgerSeq": 5000000,
+        "liveUntilLedgerSeq": 9000000
+      },
+      {
+        "key": "AAAABgAAAAFt6YO0Sy6carh6a+tStm0ft6stfcrBaE2orZGXclInygAAABAAAAABAAAAAwAAAA8AAAAHRGF5Um9vdAAAAAAPAAAACkZJWFRVUkVfV0gAAAAAAAMAAFDcAAAAAA==",
+        "xdr": "AAAABgAAAAAAAAABbemDtEsunGq4emvrUrZtH7erLX3KwWhNqK2Rl3JSJ8oAAAAQAAAAAQAAAAMAAAAPAAAAB0RheVJvb3QAAAAADwAAAApGSVhUVVJFX1dIAAAAAAADAABQ3AAAAAAAAAAQAAAAAQAAAAIAAAANAAAAIHCgYiNmMcfU8OZOjyxVGsu1hBNipViu+5kP4lFjqcriAAAAAwAAAAU=",
+        "lastModifiedLedgerSeq": 5000000,
+        "liveUntilLedgerSeq": 9000000
+      }
+    ]
+  },
+  "bundleText": "{\n  \"rpc\": \"https://rpc.example.invalid\",\n  \"contract_id\": \"CBW6TA5UJMXJY2VYPJV6WUVWNUP3PKZNPXFMC2CNVCWZDF3SKIT4UAIN\",\n  \"leaf\": {\n    \"version\": 1,\n    \"kind\": 2,\n    \"warehouse_id\": \"FIXTURE_WH\",\n    \"day\": 20700,\n    \"index\": 4,\n    \"deposit_no\": 104,\n    \"deposit_id\": \"FIXTURE-LOT-104\",\n    \"receipt_id\": 0,\n    \"receipt_version\": 0,\n    \"owner\": \"GALEKIVUALWUHOUN2FOJCCNTGR6NDWO4MNUYFBUBCR2HQTM6D5FIECXX\",\n    \"commodity\": \"MAIZE_WHITE\",\n    \"grade\": \"GRADE_1\",\n    \"kg\": 4004,\n    \"weight_source\": \"Scale\",\n    \"bags\": 40,\n    \"moisture_bps\": 1250,\n    \"custodian\": \"GDVKP5225RBIPLQS6CKBPTFKUTXHIU7BURNHGFVPM2L3RKZVNAUB445J\",\n    \"verifier\": \"GDE46EEN37PDYYALVGLYJ7CRYK5UEXXZSRAPLWYU5Y4RM2FG6I35PZ4G\",\n    \"deposited_at\": 1788516000,\n    \"at\": 1788516004,\n    \"salt\": \"f140b1bc5190dc59d4202abe3c793a3dcce9e162d02809ee5344b9e854a160b0\"\n  },\n  \"proof\": [\n    \"6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d\",\n    \"fe43d66afa4a9a5c4f9c9da89f4ffb52635c8f342e7ffb731d68e36c5982072a\",\n    \"66c4ee586be5139111ed74d1c043d9663f55e4612da5878b706d245bbf368df9\"\n  ],\n  \"day_leaves\": 5,\n  \"prev_head\": \"cac8815f969ab1f2617ec6381899afa1434b10ce4c16a1c989af78b6ff918a76\",\n  \"later_days\": []\n}"
+}

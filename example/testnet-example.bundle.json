@@ -1,0 +1,34 @@
+{
+  "rpc": "https://soroban-testnet.stellar.org",
+  "contract_id": "CBW6TA5UJMXJY2VYPJV6WUVWNUP3PKZNPXFMC2CNVCWZDF3SKIT4UAIN",
+  "leaf": {
+    "version": 1,
+    "kind": 0,
+    "warehouse_id": "TESTNET_EXAMPLE_WH",
+    "day": 20737,
+    "index": 0,
+    "deposit_no": 1,
+    "deposit_id": "TESTNET-EXAMPLE-LOT-0001",
+    "receipt_id": 0,
+    "receipt_version": 0,
+    "owner": "GA6PRGLK747AYCVGPWLNUSNSP2CASS2UTEVIZ46DO6Q6SY46JQKR5YSW",
+    "commodity": "MAIZE_WHITE",
+    "grade": "GRADE_1",
+    "kg": 4000,
+    "weight_source": "Scale",
+    "bags": 40,
+    "moisture_bps": 1250,
+    "custodian": "GATPEXERGDLT62BCYGQ66GEYGBIQIQUZVGNGEOBF34MPQ2I5WYVUEPXK",
+    "verifier": "GCVI5WKCQNI7NUQVJARBAPBN52BXMXWLEBWETE6W5DBTO6KTIFIGAVE5",
+    "deposited_at": 1791713400,
+    "at": 1791713400,
+    "salt": "6a76ca41bfacef0bcd07742dd620e724baae0f66d44f88a57f9f065ee238aaee"
+  },
+  "proof": [
+    "73533cb17b378e891fd0c79777b8a179da9189488f61514b1a2e2d351c033399",
+    "ea8a861bea14916d177dcc6b475ea97040bf7e0bebe4495a417c11d1c4dbd690"
+  ],
+  "day_leaves": 4,
+  "prev_head": "0000000000000000000000000000000000000000000000000000000000000000",
+  "later_days": []
+}
