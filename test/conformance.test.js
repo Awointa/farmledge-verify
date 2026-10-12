@@ -20,17 +20,19 @@ const PYTHON = process.env.FARMLEDGE_SKIP_PYTHON !== '1';
 const tmp = mkdtempSync(join(tmpdir(), 'farmledge-verify-'));
 after(() => rmSync(tmp, { recursive: true, force: true }));
 
-function runPython(fx) {
-  return new Promise(async (resolve) => {
-    const rpc = await serveChain(fx.chain);
-    const file = join(tmp, `${fx.name}.json`);
-    writeFileSync(file, fx.bundleText);
-    execFile('python3', ['-I', SCRIPT, file, '--rpc', rpc.url], { timeout: 90_000 }, async (err, stdout, stderr) => {
-      await rpc.close();
-      const last = stdout.trim().split('\n').at(-1) ?? '';
-      resolve({ code: last.startsWith('RESULT ') ? last.slice(7) : `NO RESULT LINE: ${stderr}`, status: err?.code ?? 0, stdout });
+async function runPython(fx) {
+  const rpc = await serveChain(fx.chain);
+  const file = join(tmp, `${fx.name}.json`);
+  writeFileSync(file, fx.bundleText);
+  try {
+    const { stdout } = await new Promise((resolve) => {
+      execFile('python3', ['-I', SCRIPT, file, '--rpc', rpc.url], { timeout: 90_000 }, (err, out, stderr) => resolve({ stdout: out, stderr }));
     });
-  });
+    const last = stdout.trim().split('\n').at(-1) ?? '';
+    return { code: last.startsWith('RESULT ') ? last.slice(7) : 'NO RESULT LINE', stdout };
+  } finally {
+    await rpc.close();
+  }
 }
 
 describe('conformance: browser verifier and verify_proof.py agree on every fixture', () => {
