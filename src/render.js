@@ -5,6 +5,8 @@
 // Shown: only what is on chain or derivable from the proof. Never names,
 // phone numbers, prices, values or loan sizes, and never a lender's loan_ref.
 
+import { compareSlip, leafRef } from './slip.js';
+
 export const h = (tag, props, ...children) => ({ tag, props: props ?? {}, children: children.flat(Infinity).filter((c) => c !== null && c !== undefined && c !== false) });
 
 /** The two codes that count as verified. Everything else is not. */
@@ -188,6 +190,7 @@ const SOURCE = {
   qr: 'scanned from a QR code',
   link: 'carried in the link that opened this page',
   fetched: 'fetched from',
+  token: "fetched from Farmledge with the token in your slip's link, at",
   example: "this site's Testnet example",
 };
 
@@ -203,6 +206,41 @@ function exampleNote() {
     h('strong', null, 'Testnet example: a real anchor on Stellar\'s test network. Not a real deposit.'));
 }
 
+const bigRef = (s) => h('code', { class: 'mono ref-big' }, s);
+const clip = (s) => (s.length > 80 ? `${s.slice(0, 80)}…` : s);
+
+/**
+ * The deposit reference, at the top of every result whatever the outcome,
+ * in the form the slip prints beneath its QR: the human half of the slip
+ * check. `check` is compareSlip's answer, or null when nothing verified.
+ */
+function refPanel(view, verified, check) {
+  const slip = view.slip ?? null;
+  const proofRef = leafRef(view.leaf);
+  const yourself = 'Compare the reference above with the one printed beneath the QR code on your slip yourself.';
+  const said = !slip ? 'none' : slip.refBad ? 'unreadable' : !slip.ref ? 'missing' : check ?? 'unchecked';
+  return h('section', { class: `ref-panel ref-${said}`, 'data-slip': said },
+    h('p', { class: 'ref-label' }, verified ? 'This proof is for deposit' : 'This bundle claims to be for deposit (its claim, unconfirmed)'),
+    proofRef ? h('p', null, bigRef(proofRef)) : h('p', null, h('strong', null, 'It names no readable deposit.')),
+    said === 'match' ? h('p', null, "The same reference as your slip's QR code. Check it against the one printed beneath the QR as well: this page cannot see the paper.") : null,
+    said === 'mismatch' ? [h('p', { class: 'ref-label' }, "Your slip's QR code names deposit"), h('p', null, bigRef(slip.ref.text)),
+      h('p', null, h('strong', null, leafRef(view.leaf) === slip.ref.text ? `The same lot, but this is its ${kind(view.leaf.kind)} record, not the deposit on your slip.` : 'A different deposit.'))] : null,
+    said === 'unchecked' ? [h('p', { class: 'ref-label' }, "Your slip's QR code names deposit"), h('p', null, bigRef(slip.ref.text)), h('p', null, 'Not compared: the proof itself did not verify, and that comes first.')] : null,
+    said === 'unreadable' ? h('p', null, h('strong', null, "The link's slip reference could not be read"), ' (', mono(clip(slip.refText)), ' is not in the printed form, WAREHOUSE.NUMBER), so this proof was not compared with your slip. ', yourself) : null,
+    said === 'missing' ? h('p', null, h('strong', null, 'The link carried no slip reference, so this page could not compare this proof with your slip. '), yourself) : null,
+    said === 'none' ? h('p', { class: 'small' }, 'No slip reference came with this bundle. If you have a slip, compare this with the reference printed beneath its QR code: this page did not see it.') : null);
+}
+
+/** The slip check's failure: shown only after the proof verified, so both are said. */
+function slipMismatchBlock(r, view) {
+  return h('section', { class: 'verdict tone-failed', 'data-code': 'SLIP_MISMATCH', 'data-tone': 'failed' },
+    h('h2', { class: 'verdict-head' }, icon('cross'), h('span', null, 'This proof is valid, and it is for a different deposit than your slip')),
+    h('p', null, 'It checks out against the ledger for ', Number(view.leaf.kind) === 0 ? 'deposit ' : `a ${kind(view.leaf.kind)} record of `, mono(leafRef(view.leaf)),
+      ', but your slip is for deposit ', mono(view.slip.ref.text), '. Do not accept it for the deposit on your slip: ask for the proof of that deposit.'),
+    h('p', { class: 'code-line' }, 'Verifier result: ', mono(r.code), '. Slip check: ', mono('SLIP_MISMATCH'),
+      ', made by this page only. The standalone script never sees your slip, so it cannot make this check.'));
+}
+
 function result(view, net) {
   // Verified needs both: one of the two codes, and the verifier's own flag.
   // Anything inconsistent is shown as no result, never as verified.
@@ -210,12 +248,18 @@ function result(view, net) {
   const r = consistent ? view.result : { ...view.result, code: 'COULD_NOT_CHECK', verified: false, facts: {} };
   // r is consistent here, so the code alone decides; the guard above is the check.
   const verified = VERIFIED.includes(r.code);
-  const claims = verified ? view.claims : null;
-  return h('div', { class: 'result', 'data-state': r.code },
+  // The slip check runs only on a verified proof: a verification failure is
+  // more fundamental, and is shown as it is whatever the slip says.
+  const check = verified ? compareSlip(view.slip?.ref, view.leaf) : null;
+  const mismatch = check === 'mismatch';
+  const claims = verified && !mismatch ? view.claims : null;
+  return h('div', { class: 'result', 'data-state': mismatch ? 'SLIP_MISMATCH' : r.code },
     claims?.status === 'ok' && claims.data.summary.recovery ? recoveryBanner() : null,
     view.source?.how === 'example' ? exampleNote() : null,
-    verdictBlock(r, net),
-    verified ? [honesty(r), deposit(view.leaf), claimsBlock(claims), anchor(r, view.anchorTime)] : null,
+    refPanel(view, verified, check),
+    mismatch ? slipMismatchBlock(r, view) : verdictBlock(r, net),
+    verified && !mismatch ? [honesty(r), deposit(view.leaf), claimsBlock(claims), anchor(r, view.anchorTime)] : null,
+    mismatch ? deposit(view.leaf) : null,
     sourceLine(view.source),
     endpointLine(r));
 }
@@ -299,6 +343,13 @@ export function render(view, net) {
     case 'unknown': return plainView('UNKNOWN', 'nocheck', 'question', 'Not a proof bundle: nothing was checked',
       'This page checks Farmledge proof bundles. A deposit number or a slip reference cannot be checked against the ledger: it carries no record and no proof.');
     case 'warehouse': return warehouseView(view.warehouse);
+    case 'slip-waiting': return h('div', { class: 'result', 'data-state': 'SLIP_WAITING' },
+      h('section', { class: 'ref-panel', 'data-slip': view.slip.ref ? 'waiting' : 'missing' },
+        view.slip.ref ? [h('p', { class: 'ref-label' }, "Your slip's QR code names deposit"), h('p', null, bigRef(view.slip.ref.text))]
+          : h('p', null, h('strong', null, view.slip.refBad ? "The link's slip reference could not be read, so no bundle can be compared with your slip." : 'The link carried no slip reference, so no bundle can be compared with your slip.'))),
+      h('section', { class: 'verdict tone-nocheck', 'data-tone': 'nocheck' },
+        h('h2', { class: 'verdict-head' }, icon('question'), h('span', null, 'Nothing checked yet')),
+        h('p', null, view.reason, ' Paste or upload the proof bundle for this deposit: it will be checked against the ledger, and compared with your slip.')));
     default: return h('div', { class: 'result' });
   }
 }

@@ -101,6 +101,24 @@ You need Python 3.8 or later and an internet connection. Nothing to install.
    the same as invalid. (stellar-rpc returns archived entries with
    `liveUntilLedgerSeq` 0; see `cmd/stellar-rpc/internal/ledgerentries/main.go`.)
 
+6. **Compare the deposit with your slip.** The script cannot do this for
+   you: it never sees your slip. A verified result proves the bundle is in
+   the books; it does not prove the bundle is for *your* deposit. Above the
+   `RESULT` line the script prints the record, for example
+
+   ```
+   4000 kg, lot 1, kind 0, in TESTNET_EXAMPLE_WH's books on day 20737
+   ```
+
+   A reprinted slip prints the same deposit beneath its QR code as one
+   reference, `TESTNET_EXAMPLE_WH.1`: the warehouse, a dot, the lot number.
+   Check that the warehouse and the lot number are both the slip's (a
+   lot number alone is not enough: other warehouses use the same numbers), and that
+   it says `kind 0`, a deposit. Any other kind is a dispatch or an
+   end-of-day balance of that lot, not the deposit on the slip. If any of
+   the three differs, the proof is valid but is not for your slip: do not
+   accept it for that deposit.
+
 ### What a verified result shows, and what it does not
 
 It shows that this bundle's contents (lot, owner address, weight, grade,
@@ -121,8 +139,8 @@ does and the script does not.
 `index.html`, `style.css`, `src/` and `fonts/`: static files, no build step,
 no server, no runtime dependency. It accepts a bundle pasted, uploaded,
 scanned from a QR code, carried in a link (`#bundle=<base64url>`, never sent
-to any server) or fetched from a URL (`?src=https://…`), and always says
-which. It recognises the two QR forms printed on counter slips today (a
+to any server), fetched from a URL (`?src=https://…`), or named by a
+reprinted slip's token (`#p=…&d=…`, below), and always says which. It recognises the two QR forms printed on counter slips today (a
 tablet capture receipt, and the post-sync leaf) and explains them; neither
 is checked, because neither carries a proof.
 
@@ -143,7 +161,51 @@ is checked, because neither carries a proof.
   roots still on the ledger, and any gaps. It says nothing about any
   deposit.
 
+- **The slip check (page only).** See below.
+
 Screenshots of every state: [`docs/screenshots/`](docs/screenshots/).
+
+### The slip check: a page-level check that `verify_proof.py` cannot make
+
+A reprinted slip's QR links here as
+
+```
+https://awointa.github.io/farmledge-verify/#p=<token>&d=<warehouse_id>.<deposit_no>
+```
+
+(farmledge-app, API decision D58). `p` is the token of the deposit's proof
+bundle, fetched from `<proofApi>/proofs/<token>` (farmledge-app
+`GET /proofs/:token`, `src/http/routes/pledges.ts`), where `proofApi` is
+page configuration in `src/config.js`, never taken from the link. **It is
+not set yet**: Farmledge's API has no public address, so the deployed
+page shows the slip's reference, says it cannot fetch, and asks for the
+bundle to be pasted or uploaded instead. `d` is the deposit the slip
+names, in the form the slip prints beneath the QR: `TESTNET_EXAMPLE_WH.1`.
+
+- **Identity only.** `d` is `(warehouse_id, deposit_no)`, the two leaf
+  fields the contract's duplicate guard is keyed on (protocol
+  `docs/events.md`; `contracts/receipt/src/storage.rs`, `claim_key`). A
+  bare deposit number would match another warehouse's lot. No hash of the
+  leaf: every other field is already bound by the proof, and a person can
+  compare a reference with paper, never a hash.
+- **A deposit record.** The slip names a deposit, so the leaf must also be
+  kind 0. The same lot's dispatch or balance record carries the same
+  reference and does not match.
+- **After verification, never instead of it.** The bundle is verified
+  first. If that fails, the failure is shown, whatever the slip says: it is
+  more fundamental. Only a verified bundle for a different deposit than
+  the slip's is shown as the red **"This proof is valid, and it is for a
+  different deposit than your slip"**, with no claims and no tick.
+- **Not a verifier result.** `SLIP_MISMATCH` is not among the result codes
+  shared with `verify_proof.py` and pinned by the conformance test. The
+  script verifies a bundle against the chain and never sees a slip, so
+  someone using only the script must make this comparison by hand: step 6
+  above.
+- **Said, never hidden.** The deposit reference heads every result, in the
+  slip's form, whatever the outcome. A link with no `d`, or a `d` not in
+  that exact form, is said to have been impossible to compare.
+- The token travels in the fragment, so the page's host never sees it; it
+  is sent only to the proof API, without credentials or referrer.
 
 ## Development
 

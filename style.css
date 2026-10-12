@@ -126,6 +126,14 @@ ol li { margin-bottom: 0.4rem; }
 .icon-question { background: transparent; border: 2px dashed var(--earth-mid); }
 .icon-question::after { content: '?'; color: var(--earth-deep); }
 
+/* The deposit reference, as the slip prints it beneath its QR: large, mono, unbroken, readable at arm's length. */
+.ref-panel { background: var(--paper); border: 2px solid var(--line); border-radius: 12px; padding: 0.7rem 1rem; margin-bottom: 0.8rem; }
+.ref-panel p { margin: 0.2rem 0; }
+.ref-label { color: var(--earth-mid); font-size: 0.9rem; }
+.ref-big { display: inline-block; font-size: 1.45rem; font-weight: 400; letter-spacing: 0.02em; color: var(--earth-deep); overflow-wrap: anywhere; }
+.ref-mismatch { border-color: var(--alert-red); border-width: 3px; }
+.ref-missing, .ref-unreadable { border-color: var(--alert-amber); border-left-width: 10px; }
+
 .banner { border-radius: 10px; padding: 0.8rem 1rem; margin-bottom: 0.8rem; }
 .banner-recovery { background: var(--alert-red); color: #fff; font-size: 1.1rem; }
 .banner-example { background: var(--grain-warm); border: 2px dashed var(--earth-mid); }

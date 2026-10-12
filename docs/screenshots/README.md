@@ -1,8 +1,8 @@
 # Every state of the page
 
-> ## ⚠ 01–29 ARE SYNTHETIC. ONLY 00 AND 30 ARE REAL TESTNET ANCHORS.
+> ## ⚠ 01–29 AND 31–36 ARE SYNTHETIC. ONLY 00 AND 30 ARE REAL TESTNET ANCHORS.
 >
-> Screenshots **01–29** (`*-synthetic-*.png`) show the page answering from
+> Screenshots **01–29** and **31–36** (`*-synthetic-*.png`) show the page answering from
 > **synthetic test data**: fixture chains served to the unmodified page by the
 > test harness in place of the RPC. Nothing in them was anchored on any
 > network. Their warehouse (`FIXTURE_WH`), lots, receipts, lender, dates,
@@ -143,3 +143,27 @@ and watermark are added by the test harness.
 ## 30 · REAL (Testnet) · Warehouse anchoring record for the Testnet example warehouse
 
 ![30-live-testnet-warehouse-record.png](30-live-testnet-warehouse-record.png)
+
+## 31 · SYNTHETIC · A slip link on the deployed page, which has no proof API yet: the slip's reference, nothing fetched
+
+![31-synthetic-slip-link-no-proof-api.png](31-synthetic-slip-link-no-proof-api.png)
+
+## 32 · SYNTHETIC · Verified, and the deposit matches the slip's reference
+
+![32-synthetic-slip-match.png](32-synthetic-slip-match.png)
+
+## 33 · SYNTHETIC · SLIP_MISMATCH (page check): the proof is valid, and it is for a different deposit than the slip
+
+![33-synthetic-slip-mismatch.png](33-synthetic-slip-mismatch.png)
+
+## 34 · SYNTHETIC · A forged bundle with a slip that does not match: the verification failure comes first
+
+![34-synthetic-slip-forged-failure-first.png](34-synthetic-slip-forged-failure-first.png)
+
+## 35 · SYNTHETIC · A slip token fetched from a proof API (served by the harness: none is public yet)
+
+![35-synthetic-slip-token-fetched.png](35-synthetic-slip-token-fetched.png)
+
+## 36 · SYNTHETIC · A slip link with no reference: verified, and said to be uncompared with the slip
+
+![36-synthetic-slip-link-no-reference.png](36-synthetic-slip-link-no-reference.png)
