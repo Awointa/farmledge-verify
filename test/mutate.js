@@ -93,7 +93,7 @@ export const MUTATIONS = [
   ['render: missing reference said', 'src/render.js', "!slip.ref ? 'missing' :", "!slip.ref ? 'none' :"],
   ['slip: resolver gets a token only', 'src/slip.js', "if (!isToken(token)) throw new Error('not a proof token');", ''],
   // --- the copy: docs/claims.md is enforced (test/copy-claims.test.js) ---
-  ['copy: the old SMS claim comes back', 'src/render.js', 'and no bundle has been delivered to a farmer.', 'and within 24 hours the farmer is sent the proof bundle by SMS link.'],
+  ['copy: the old SMS claim comes back', 'src/render.js', 'Its text-message sending is a placeholder that only writes to a log.', 'Within 24 hours the farmer is sent the proof bundle by SMS link.'],
   ['copy: a nightly anchor is promised', 'src/render.js', 'Check again after the warehouse next anchors its books:', "Check again after the warehouse's next nightly anchor:"],
   // --- src/input.js ---
   ['input: capture receipts recognised', 'src/input.js', "if (m) return { kind: 'capture', depositId: m[1] };", ''],
@@ -114,7 +114,7 @@ function run(only) {
     let res;
     try {
       res = spawnSync(process.execPath, ['--test', '--test-timeout=20000', 'test/*.test.js'], {
-        cwd: ROOT, env: { ...process.env, FARMLEDGE_SKIP_PYTHON: '1', FARMLEDGE_SKIP_BROWSER: '1' }, encoding: 'utf8',
+        cwd: ROOT, env: { ...process.env, FARMLEDGE_SKIP_PYTHON: '1', FARMLEDGE_SKIP_BROWSER: '1', FARMLEDGE_MUTATING: '1' }, encoding: 'utf8',
       });
     } finally {
       writeFileSync(path, original);
