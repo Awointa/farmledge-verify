@@ -9,4 +9,12 @@ export const NETWORK = Object.freeze({
   rpcUrl: 'https://soroban-testnet.stellar.org',
   contractId: 'CBW6TA5UJMXJY2VYPJV6WUVWNUP3PKZNPXFMC2CNVCWZDF3SKIT4UAIN',
   isTestNetwork: true,
+  // Where a reprinted slip's #p=<token> is fetched from: <proofApi>/proofs/<token>
+  // (farmledge-app GET /proofs/:token, API D58). Page configuration, never
+  // the link's. The bundle it returns is a claim like any other; only the
+  // ledger checks it. Null until Farmledge's API has a public address: a
+  // slip link then says it cannot fetch, and the bundle can still be pasted
+  // or uploaded and compared with the slip.
+  proofApi: null,
+  proofTimeoutMs: 15_000,
 });

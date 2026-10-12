@@ -28,7 +28,7 @@
   <main class="wrap">
     <section class="intro">
       <h1>Check a warehouse proof against the ledger</h1>
-      <p>A Farmledge <strong>proof bundle</strong> is Farmledge's claim about a deposit. It can reach you any way at all: from the farmer, by text message, or downloaded from a Farmledge server. That does not weaken this check.</p>
+      <p>A Farmledge <strong>proof bundle</strong> is Farmledge's claim about a deposit. Whoever hands it to you, and however, this check does not depend on them.</p>
       <p><strong>This page does not take Farmledge's word for anything.</strong> It checks the claim against the Stellar ledger, in your browser, and reads nothing else: no Farmledge server computes or reports the result. We are not asking you to trust us. We are proving we cannot have rewritten the books.</p>
     </section>
 
@@ -71,6 +71,7 @@
         <li>Download <a href="scripts/verify_proof.py" download>verify_proof.py</a> (about 200 lines, standard library only; read it).</li>
         <li>Run <code class="mono">python3 verify_proof.py bundle.json --rpc https://soroban-testnet.stellar.org</code></li>
         <li>Read the last line: <code class="mono">RESULT OK</code> or <code class="mono">RESULT DAY_ROOT_EXPIRED</code> are the only two verified results. Every other result is not.</li>
+        <li>Compare the warehouse and deposit reference in the output with the ones printed on the slip. The script cannot do this for you: it never sees your slip. For the Testnet example the line above the result reads <code class="mono">lot 1, kind 0, in TESTNET_EXAMPLE_WH's books</code>: as a slip reference, that deposit is <code class="mono">TESTNET_EXAMPLE_WH.1</code>. The warehouse and the lot number must both match, and the kind must be 0, a deposit.</li>
       </ol>
       <p class="small">Step-by-step instructions, and what each result means, are in the <a href="https://github.com/Awointa/farmledge-verify#verify-a-bundle-yourself-with-python-and-nothing-else">README</a>. The script is byte for byte the protocol's own <a href="https://github.com/Awointa/farmledge-protocol/blob/3f731e82b28523f0ac2b247a026c1ebf67df0a83/scripts/verify_proof.py">scripts/verify_proof.py</a> (pinned by SHA-256), and is printed in full in the protocol's public specification, <a href="https://github.com/Awointa/farmledge-protocol/blob/3f731e82b28523f0ac2b247a026c1ebf67df0a83/docs/events.md#farmer-proofs">docs/events.md</a>.</p>
     </section>

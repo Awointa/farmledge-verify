@@ -40,7 +40,7 @@ before(async () => {
 after(async () => { await browser?.close(); await site?.close(); if (built) rmSync(join(built, '..'), { recursive: true, force: true }); });
 
 /** A page whose RPC requests go to `chain` (a fixture chain), or to the real network when chain is null. */
-async function open(chain, { hook } = {}) {
+async function open(chain, { hook, path = '', before } = {}) {
   const page = await browser.newPage({ viewport: { width: 390, height: 844 } });
   const hosts = new Set();
   page.on('request', (r) => hosts.add(new URL(r.url()).host));
@@ -63,7 +63,8 @@ async function open(chain, { hook } = {}) {
       }
     });
   }
-  await page.goto(`${site.url}/index.html`);
+  if (before) await before(page);
+  await page.goto(`${site.url}/index.html${path}`);
   return { page, hosts, close: async () => { await page.close(); await rpc?.close(); } };
 }
 
@@ -162,7 +163,8 @@ test('page: could not reach the chain renders as nothing like verified', { skip:
   try {
     await paste(p.page, f.bundleText);
     assert.equal(await state(p.page), 'COULD_NOT_CHECK');
-    const t = await p.page.locator('#result').innerText();
+    // The slip instruction is the reader's check, not a result, and is on every screen.
+    const t = (await p.page.locator('#result').innerText()).replace('Check this matches the deposit number printed on the slip.', '');
     assert.match(t, /Could not check/);
     assert.match(t, /This is not a result/);
     assert.doesNotMatch(t, /verified|matches|chained|anchored in ledger/i);
@@ -275,5 +277,172 @@ test('page: the Testnet example, against the real Testnet', { skip: SKIP || !LIV
     await settle(p.page, '#wh-result');
     await p.page.locator('#wh-form').scrollIntoViewIfNeeded();
     await shot(p.page, '30-warehouse-record', { live: true });
+  } finally { await p.close(); }
+});
+
+// --- the slip check (src/slip.js): a page check after verification ---
+
+const TOKEN = 'Xq3vR9k2LmN8pQ4sT6uW1yZ0';
+const API = 'https://proofs.farmledge.test';
+const slipState = (page) => page.getAttribute('#result [data-slip]', 'data-slip');
+
+/** The deployed page has no proof API (NETWORK.proofApi is null); this serves the page as if it had one, and answers it. */
+const withApi = (answer, seen = [], { timeoutMs } = {}) => async (page) => {
+  await page.route('**/src/config.js', async (route) => {
+    const res = await route.fetch();
+    let body = (await res.text()).replace('proofApi: null,', `proofApi: '${API}',`);
+    if (timeoutMs) body = body.replace('proofTimeoutMs: 15_000,', `proofTimeoutMs: ${timeoutMs},`);
+    assert.ok(!timeoutMs || body.includes(`proofTimeoutMs: ${timeoutMs},`), 'config.js no longer has proofTimeoutMs: 15_000');
+    assert.ok(body.includes(API), 'config.js no longer has proofApi: null');
+    await route.fulfill({ response: res, body });
+  });
+  await page.route(`${API}/**`, async (route) => {
+    seen.push({ url: route.request().url(), headers: route.request().headers() });
+    const answered = await answer();
+    if (answered === null) return; // never answers
+    const [status, body] = answered;
+    await route.fulfill({ status, contentType: 'application/json', body, headers: { 'access-control-allow-origin': '*' } });
+  });
+};
+
+test('page: a slip link on the deployed page, which has no proof API: the slip is shown, nothing fetched', { skip: SKIP }, async () => {
+  const f = fx('valid');
+  const p = await open(f.chain, { path: `#p=${TOKEN}&d=FIXTURE_WH.101` });
+  try {
+    await settle(p.page);
+    assert.equal(await state(p.page), 'SLIP_WAITING');
+    const t = await p.page.locator('#result').innerText();
+    assert.match(t, /FIXTURE_WH\.101/);
+    assert.match(t, /no Farmledge address set/);
+    assert.equal(await p.page.locator('#result .icon-check').count(), 0);
+    await shot(p.page, '31-slip-link-no-proof-api');
+    // Pasted, the slip's own bundle verifies and matches.
+    await paste(p.page, f.bundleText);
+    assert.equal(await state(p.page), 'OK');
+    assert.equal(await slipState(p.page), 'match');
+    assert.equal(await p.page.locator('#result .ref-big').first().innerText(), 'FIXTURE_WH.101');
+    await shot(p.page, '32-slip-match');
+    assert.deepEqual([...p.hosts].filter((h) => h !== new URL(site.url).host && h !== new URL(NETWORK.rpcUrl).host), []);
+  } finally { await p.close(); }
+});
+
+test('page: a valid proof for another deposit than the slip is a red failure, after verifying', { skip: SKIP }, async () => {
+  const f = fx('claims-pledged');
+  let reads = 0;
+  const p = await open(f.chain, { path: `#p=${TOKEN}&d=OTHER_WH.101`, hook: async () => { reads++; return false; } });
+  try {
+    await settle(p.page);
+    await paste(p.page, f.bundleText);
+    assert.equal(await state(p.page), 'SLIP_MISMATCH');
+    const t = await p.page.locator('#result').innerText();
+    assert.match(t, /This proof is valid, and it is for a different deposit than your slip/);
+    assert.match(t, /Verifier result: OK/);
+    assert.equal(await p.page.locator('#result .tone-verified, #result .icon-check, #result .honesty, #result .claims').count(), 0);
+    assert.ok(reads >= 2 && reads <= 4, `verified on the chain, then no claims read (${reads} reads)`);
+    await shot(p.page, '33-slip-mismatch');
+  } finally { await p.close(); }
+});
+
+test('page: a verification failure is shown as itself, even with a slip that does not match', { skip: SKIP }, async () => {
+  const f = fx('tampered-leaf');
+  const p = await open(f.chain, { path: `#p=${TOKEN}&d=OTHER_WH.9` });
+  try {
+    await settle(p.page);
+    await paste(p.page, f.bundleText);
+    assert.equal(await state(p.page), 'DAY_ROOT_DIFFERS');
+    assert.equal(await slipState(p.page), 'unchecked');
+    await shot(p.page, '34-slip-forged-failure-first');
+  } finally { await p.close(); }
+});
+
+test('page: a slip token is fetched from the configured proof API, without credentials or referrer', { skip: SKIP }, async () => {
+  const f = fx('valid');
+  const seen = [];
+  const p = await open(f.chain, { path: `#p=${TOKEN}&d=FIXTURE_WH.101`, before: withApi(() => [200, f.bundleText], seen) });
+  try {
+    await settle(p.page);
+    assert.equal(await state(p.page), 'OK');
+    assert.equal(await slipState(p.page), 'match');
+    assert.deepEqual(seen.map((s) => s.url), [`${API}/proofs/${TOKEN}`]);
+    assert.equal(seen[0].headers.cookie, undefined);
+    assert.equal(seen[0].headers.referer, undefined);
+    assert.match(await p.page.locator('#result').innerText(), new RegExp(`fetched from Farmledge with the token in your slip's link, at ${API}/proofs/${TOKEN}`));
+    await shot(p.page, '35-slip-token-fetched');
+  } finally { await p.close(); }
+});
+
+test('page: a slip link without a reference says it could not compare', { skip: SKIP }, async () => {
+  const f = fx('valid');
+  const p = await open(f.chain, { path: `#p=${TOKEN}`, before: withApi(() => [200, f.bundleText]) });
+  try {
+    await settle(p.page);
+    assert.equal(await state(p.page), 'OK');
+    assert.equal(await slipState(p.page), 'missing');
+    assert.match(await p.page.locator('#result').innerText(), /The link carried no slip reference/);
+    await shot(p.page, '36-slip-link-no-reference');
+  } finally { await p.close(); }
+});
+
+test('page: a slip token Farmledge does not know is not a result', { skip: SKIP }, async () => {
+  const p = await open(fx('valid').chain, { path: `#p=${TOKEN}&d=FIXTURE_WH.101`, before: withApi(() => [404, '{"error":"Proof not found"}']) });
+  try {
+    await settle(p.page);
+    assert.equal(await state(p.page), 'SLIP_WAITING');
+    assert.match(await p.page.locator('#result').innerText(), /Farmledge has no proof for the token in this link/);
+    assert.equal(await p.page.locator('#result .icon-check').count(), 0);
+    await shot(p.page, '40-slip-token-not-found');
+  } finally { await p.close(); }
+});
+
+test('page: a slip token that returns a valid bundle for another deposit is a red failure, after verifying', { skip: SKIP }, async () => {
+  const f = fx('valid');
+  const requests = [];
+  const p = await open(f.chain, { path: `#p=${TOKEN}&d=OTHER_WH.101`, before: withApi(() => [200, f.bundleText]) });
+  p.page.on('request', (r) => requests.push(`${r.url()} ${JSON.stringify(r.headers())} ${r.postData() ?? ''}`));
+  try {
+    await settle(p.page);
+    assert.equal(await state(p.page), 'SLIP_MISMATCH');
+    assert.match(await p.page.locator('#result').innerText(), /This proof is valid, and it is for a different deposit than your slip/);
+    await shot(p.page, '37-slip-token-other-deposit');
+  } finally { await p.close(); }
+});
+
+test('page: the slip reference is never sent anywhere, to the resolver or the RPC', { skip: SKIP }, async () => {
+  const f = fx('valid');
+  const sent = [];
+  const p = await open(f.chain, { path: `#p=${TOKEN}&d=FIXTURE_WH.101`, before: async (page) => {
+    page.on('request', (r) => sent.push(`${r.url()}\n${JSON.stringify(r.headers())}\n${r.postData() ?? ''}`));
+    await withApi(() => [200, f.bundleText])(page);
+  } });
+  try {
+    await settle(p.page);
+    assert.equal(await slipState(p.page), 'match');
+    assert.ok(sent.some((x) => x.startsWith(`${API}/proofs/${TOKEN}\n`)), 'the token was fetched');
+    for (const x of sent) {
+      assert.doesNotMatch(x, /FIXTURE_WH\.101|[?&#]d=/, x.split('\n')[0]);
+      if (!x.startsWith(API)) assert.ok(!x.includes(TOKEN), `the token went to ${x.split('\n')[0]}`);
+    }
+  } finally { await p.close(); }
+});
+
+test('page: a slip token answered with something that is not JSON is not a result, and keeps the slip', { skip: SKIP }, async () => {
+  const p = await open(fx('valid').chain, { path: `#p=${TOKEN}&d=FIXTURE_WH.101`, before: withApi(() => [200, '{"contract_id": "C…", "leaf": {']) });
+  try {
+    await settle(p.page);
+    assert.equal(await state(p.page), 'UNREADABLE');
+    assert.equal(await slipState(p.page), 'waiting');
+    assert.equal(await p.page.locator('#result .icon-check').count(), 0);
+    await shot(p.page, '38-slip-token-malformed-json');
+  } finally { await p.close(); }
+});
+
+test('page: a slip token Farmledge does not answer in time is not a result', { skip: SKIP }, async () => {
+  const p = await open(fx('valid').chain, { path: `#p=${TOKEN}&d=FIXTURE_WH.101`, before: withApi(() => new Promise((r) => setTimeout(() => r(null), 5000)), [], { timeoutMs: 800 }) });
+  try {
+    await settle(p.page);
+    assert.equal(await state(p.page), 'SLIP_WAITING');
+    assert.match(await p.page.locator('#result').innerText(), /Farmledge did not answer within 0\.8 seconds, so nothing was fetched/);
+    assert.equal(await p.page.locator('#result .icon-check').count(), 0);
+    await shot(p.page, '39-slip-token-timeout');
   } finally { await p.close(); }
 });

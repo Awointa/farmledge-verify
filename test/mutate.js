@@ -71,13 +71,30 @@ export const MUTATIONS = [
   ['warehouse: no head', 'src/warehouse.js', 'if (head === null) return { warehouseId, chainDay: today, head: null, days: [], gaps: [] };', ''],
   // --- src/render.js: what the page shows ---
   ['render: code and flag must agree', 'src/render.js', "const consistent = VERIFIED.includes(view.result.code) === (view.result.verified === true);", 'const consistent = true;'],
-  ['render: honesty beside the tick', 'src/render.js', 'verified ? [honesty(r), deposit(view.leaf)', 'verified ? [deposit(view.leaf)'],
+  ['render: honesty beside the tick', 'src/render.js', 'verified && !mismatch ? [honesty(r), deposit(view.leaf)', 'verified && !mismatch ? [deposit(view.leaf)'],
   ['render: recovery banner', 'src/render.js', "claims?.status === 'ok' && claims.data.summary.recovery ? recoveryBanner() : null,", ''],
   ['render: could-not-check tone', 'src/render.js', "case 'COULD_NOT_CHECK': default: return { tone: 'nocheck', icon: 'question',", "case 'COULD_NOT_CHECK': default: return { tone: 'verified', icon: 'check',"],
   ['render: pending is not verified', 'src/render.js', "case 'NOT_YET_ANCHORED': return { tone: 'pending', icon: 'clock',", "case 'NOT_YET_ANCHORED': return { tone: 'verified', icon: 'check',"],
   ['render: source shown', 'src/render.js', '    sourceLine(view.source),\n', ''],
   ['render: suggested endpoint shown', 'src/render.js', ": ['The bundle suggested ', mono(e.suggested), ': not used. A bundle cannot choose what it is checked against.']);", ": '');"],
   ['render: why expired suffices', 'src/render.js', "r.code === 'DAY_ROOT_EXPIRED'\n      ? h('p'", "false\n      ? h('p'"],
+  // --- src/slip.js and its display: the page-level slip check ---
+  ['slip: same warehouse', 'src/slip.js', 'const sameWarehouse = leaf?.warehouse_id === slipRef.warehouseId;', 'const sameWarehouse = true;'],
+  ['slip: same deposit number', 'src/slip.js', 'sameNumber = BigInt(leaf?.deposit_no) === slipRef.depositNo;', 'sameNumber = true;'],
+  ['slip: a deposit record', 'src/slip.js', 'aDeposit = BigInt(leaf?.kind) === 0n;', 'aDeposit = true;'],
+  ['slip: one spelling of the number', 'src/slip.js', 'const REF = /^([A-Za-z0-9_]{1,32})\\.(0|[1-9][0-9]{0,19})$/;', 'const REF = /^([A-Za-z0-9_]{1,32})\\.([0-9]{1,20})$/;'],
+  ['slip: u64 range', 'src/slip.js', 'if (depositNo > U64_MAX) return null;', ''],
+  ['slip: token shape', 'src/slip.js', 'token: token !== null && isToken(token) ? token : null,', 'token,'],
+  ['slip: unreadable reference reported', 'src/slip.js', 'refBad: refText !== null && ref === null,', 'refBad: false,'],
+  ['render: verification failure first', 'src/render.js', 'const check = verified ? compareSlip(view.slip?.ref, view.leaf) : null;', 'const check = compareSlip(view.slip?.ref, view.leaf);'],
+  ['render: mismatch overrides verified', 'src/render.js', "const mismatch = check === 'mismatch';", 'const mismatch = false;'],
+  ['render: no claims for another lot', 'src/render.js', 'const claims = verified && !mismatch ? view.claims : null;', 'const claims = verified ? view.claims : null;'],
+  ['render: reference on every result', 'src/render.js', '    refPanel(view, verified, check),\n', ''],
+  ['render: missing reference said', 'src/render.js', "!slip.ref ? 'missing' :", "!slip.ref ? 'none' :"],
+  ['slip: resolver gets a token only', 'src/slip.js', "if (!isToken(token)) throw new Error('not a proof token');", ''],
+  // --- the copy: docs/claims.md is enforced (test/copy-claims.test.js) ---
+  ['copy: the old SMS claim comes back', 'src/render.js', 'Its text-message sending is a placeholder that only writes to a log.', 'Within 24 hours the farmer is sent the proof bundle by SMS link.'],
+  ['copy: a nightly anchor is promised', 'src/render.js', 'Check again after the warehouse next anchors its books:', "Check again after the warehouse's next nightly anchor:"],
   // --- src/input.js ---
   ['input: capture receipts recognised', 'src/input.js', "if (m) return { kind: 'capture', depositId: m[1] };", ''],
   ['input: slip leaf fields only', 'src/input.js', 'for (const k of LEAF_FIELDS) if (k in v) leaf[k] = v[k];', 'Object.assign(leaf, v);'],
@@ -97,7 +114,7 @@ function run(only) {
     let res;
     try {
       res = spawnSync(process.execPath, ['--test', '--test-timeout=20000', 'test/*.test.js'], {
-        cwd: ROOT, env: { ...process.env, FARMLEDGE_SKIP_PYTHON: '1', FARMLEDGE_SKIP_BROWSER: '1' }, encoding: 'utf8',
+        cwd: ROOT, env: { ...process.env, FARMLEDGE_SKIP_PYTHON: '1', FARMLEDGE_SKIP_BROWSER: '1', FARMLEDGE_MUTATING: '1' }, encoding: 'utf8',
       });
     } finally {
       writeFileSync(path, original);

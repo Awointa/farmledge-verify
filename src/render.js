@@ -5,6 +5,8 @@
 // Shown: only what is on chain or derivable from the proof. Never names,
 // phone numbers, prices, values or loan sizes, and never a lender's loan_ref.
 
+import { compareSlip, leafRef } from './slip.js';
+
 export const h = (tag, props, ...children) => ({ tag, props: props ?? {}, children: children.flat(Infinity).filter((c) => c !== null && c !== undefined && c !== false) });
 
 /** The two codes that count as verified. Everything else is not. */
@@ -30,14 +32,14 @@ export function verdict(code, r, net) {
     case 'DAY_ROOT_EXPIRED': return { tone: 'verified', icon: 'check', headline: "Verified through the warehouse's chain of commitments",
       body: ['This record is in ', wh, "'s books for ", d, ". That day's own root has left the ledger after 30 days, as designed, so it was verified through the chain of daily commitments, which is enough: see below."] };
     case 'NOT_YET_ANCHORED': return { tone: 'pending', icon: 'clock', headline: 'Not checkable yet: these books have not been committed',
-      body: [wh, ' has not anchored its books for ', d, ' yet. This is not a failure, and it is not a confirmation: nothing on the ledger speaks to this record yet. Check again after the warehouse\'s next nightly anchor.',
+      body: [wh, ' has not anchored its books for ', d, ' yet. This is not a failure, and it is not a confirmation: nothing on the ledger speaks to this record yet. Check again after the warehouse next anchors its books: its anchoring record, below, shows when it has anchored so far.',
         f.lastAnchoredDay !== undefined && f.chainDay !== undefined && f.lastAnchoredDay < f.chainDay - 1
-          ? ` The warehouse has not anchored since ${day(f.lastAnchoredDay)}: its anchor is overdue.` : ''] };
+          ? ` The warehouse has not anchored since ${day(f.lastAnchoredDay)}.` : ''] };
     case 'DAY_ROOT_DIFFERS': return { tone: 'failed', icon: 'cross', headline: 'Does not match: this record has been altered or forged',
       body: ['The books ', wh, ' committed on Stellar for ', d, ' do not contain this record as written. Do not rely on it.'] };
     case 'HEAD_MISMATCH': return { tone: 'failed', icon: 'cross', headline: "Not chained: this record is not in the warehouse's committed history",
       body: ['The days this bundle claims do not reproduce the chain of commitments ', wh, ' has on Stellar today. Either the record or its claimed history has been altered: this is how backdating shows up.',
-        r?.detail?.includes('later_days is missing') ? ' (The bundle may also just be out of date: it lacks the anchors after its day. A genuine bundle, re-issued with them, will pass.)' : ''] };
+        r?.detail?.includes('later_days is missing') ? ' (The bundle may also just be out of date: it lacks the anchors after its day. A genuine bundle with those days added will pass.)' : ''] };
     case 'NO_HEAD': return { tone: 'failed', icon: 'cross', headline: 'Nothing anchored this claim',
       body: [wh, ' has never committed any books on Stellar. No anchor stands behind this record.'] };
     case 'PROOF_DOES_NOT_FIT': return { tone: 'failed', icon: 'cross', headline: "Malformed proof: it cannot belong to that day's books",
@@ -80,7 +82,7 @@ function honesty(r) {
     h('p', null, ...HONESTY_CHECKED(mono(f.warehouseId), day(f.day))),
     h('h3', null, 'What this did not check'),
     h('ul', null, HONESTY_NOT.map((t) => h('li', null, t))),
-    h('p', { class: 'small' }, 'Those rest on the warehouse, its audits and your own diligence. A ledger record is evidence of what was recorded, not of what is in the store.'));
+    h('p', { class: 'small' }, 'Those rest on the warehouse and on your own diligence. A ledger record is evidence of what was recorded, not of what is in the store.'));
 }
 
 function deposit(leaf) {
@@ -140,7 +142,7 @@ function claimsBlock(claims) {
   if (receipts.length === 0) {
     return h('section', { class: 'claims', 'data-claims': 'none' },
       h('h3', null, 'Claims on this lot, from the ledger now'),
-      h('p', null, h('strong', null, 'No receipt has been issued on the ledger for this lot.'), ' A receipt is issued only when a lot is pledged, so nothing on the ledger encumbers it.'));
+      h('p', null, h('strong', null, 'No receipt has been issued on the ledger for this lot.'), ' Nothing on the ledger encumbers it.'));
   }
   const k = summary.kg;
   const line = (state, text) => (k[state] > 0n ? h('li', { class: `sum sum-${state}` }, h('span', { class: 'sum-kg' }, kg(k[state])), ' ', text) : null);
@@ -152,8 +154,8 @@ function claimsBlock(claims) {
       h('li', { class: 'sum sum-total' }, h('span', { class: 'sum-kg' }, kg(k.total)), ' total on receipts'),
       line('Active', 'unencumbered'),
       summary.pledges.map((p) => h('li', { class: `sum sum-${p.status}` }, h('span', { class: 'sum-kg' }, kg(p.weightKg)), ' ', ...pledgeText(p))),
-      line('Exited', 'released: the goods have left the warehouse'),
-      line('Revoked', 'revoked by the Farmledge admin: void')),
+      line('Exited', 'released: recorded on the ledger as having left the warehouse'),
+      line('Revoked', 'revoked by the contract admin: void')),
     h('table', { class: 'receipts' },
       h('thead', null, h('tr', null, h('th', null, 'Receipt'), h('th', null, 'Weight'), h('th', null, 'State'), h('th', null, 'On the ledger'))),
       h('tbody', null, receipts.map((r) => h('tr', { class: `state-${r.status}` },
@@ -163,7 +165,7 @@ function claimsBlock(claims) {
         h('td', null,
           r.lock && (r.status === 'Pledged' || r.status === 'Recovery') ? h('div', null, 'Lender ', mono(r.lock.lender), h('br'), `Due ${due(r.lock.dueDate)}, ${graceDays(r.lock.gracePeriod)}`) : null,
           r.status === 'Exited' && r.exitDate ? h('div', null, `Released ${when(r.exitDate)}`) : null,
-          r.status === 'Revoked' ? h('div', null, 'Voided by the admin; it confers nothing.') : null,
+          r.status === 'Revoked' ? h('div', null, 'Voided by the contract admin; it confers nothing.') : null,
           r.weightSource === 'BagEstimate' ? h('div', { class: 'muted' }, 'Weight estimated from bag count') : null,
           r.archived ? h('div', { class: 'archived' }, h('strong', null, 'Archived entry. '), 'Its storage rent has lapsed, so Stellar moved it out of fast storage. It is still on the ledger and was read: archived is not invalid.') : null))))));
 }
@@ -188,6 +190,7 @@ const SOURCE = {
   qr: 'scanned from a QR code',
   link: 'carried in the link that opened this page',
   fetched: 'fetched from',
+  token: "fetched from Farmledge with the token in your slip's link, at",
   example: "this site's Testnet example",
 };
 
@@ -203,6 +206,42 @@ function exampleNote() {
     h('strong', null, 'Testnet example: a real anchor on Stellar\'s test network. Not a real deposit.'));
 }
 
+const bigRef = (s) => h('code', { class: 'mono ref-big' }, s);
+const clip = (s) => (s.length > 80 ? `${s.slice(0, 80)}…` : s);
+
+/**
+ * The deposit reference, at the top of every result whatever the outcome,
+ * in the form the slip prints beneath its QR: the human half of the slip
+ * check. `check` is compareSlip's answer, or null when nothing verified.
+ */
+function refPanel(view, verified, check) {
+  const slip = view.slip ?? null;
+  const proofRef = leafRef(view.leaf);
+  const CHECK = 'Check this matches the deposit number printed on the slip.';
+  const ONLY_YOU = 'Only your own comparison with the slip guards against a swapped bundle.';
+  const said = !slip ? 'none' : slip.refBad ? 'unreadable' : !slip.ref ? 'missing' : check ?? 'unchecked';
+  return h('section', { class: `ref-panel ref-${said}`, 'data-slip': said },
+    h('p', { class: 'ref-label' }, verified ? 'This proof is for deposit' : 'This bundle claims to be for deposit (its claim, unconfirmed)'),
+    proofRef ? [h('p', null, bigRef(proofRef)), h('p', { class: 'ref-check' }, h('strong', null, CHECK))] : h('p', null, h('strong', null, 'It names no readable deposit.')),
+    said === 'match' ? h('p', null, "It is the deposit your slip's QR code names. This page cannot see the paper, so the check above is still yours to make.") : null,
+    said === 'mismatch' ? [h('p', { class: 'ref-label' }, "Your slip's QR code names deposit"), h('p', null, bigRef(slip.ref.text)),
+      h('p', null, h('strong', null, leafRef(view.leaf) === slip.ref.text ? `The same lot, but this is its ${kind(view.leaf.kind)} record, not the deposit on your slip.` : 'A different deposit.'))] : null,
+    said === 'unchecked' ? [h('p', { class: 'ref-label' }, "Your slip's QR code names deposit"), h('p', null, bigRef(slip.ref.text)), h('p', null, 'Not compared: the proof itself did not verify, and that comes first.')] : null,
+    said === 'unreadable' ? h('p', null, h('strong', null, "The link's slip reference could not be read"), ' (', mono(clip(slip.refText)), ' is not in the form WAREHOUSE.NUMBER), so this page could not compare this proof with your slip. ', ONLY_YOU) : null,
+    said === 'missing' ? h('p', null, h('strong', null, 'The link carried no slip reference, so this page could not compare this proof with your slip. '), ONLY_YOU) : null,
+    said === 'none' ? h('p', null, 'No slip reference came with this bundle, so this page could not compare it with a slip. ', ONLY_YOU) : null);
+}
+
+/** The slip check's failure: shown only after the proof verified, so both are said. */
+function slipMismatchBlock(r, view) {
+  return h('section', { class: 'verdict tone-failed', 'data-code': 'SLIP_MISMATCH', 'data-tone': 'failed' },
+    h('h2', { class: 'verdict-head' }, icon('cross'), h('span', null, 'This proof is valid, and it is for a different deposit than your slip')),
+    h('p', null, 'It checks out against the ledger for ', Number(view.leaf.kind) === 0 ? 'deposit ' : `a ${kind(view.leaf.kind)} record of `, mono(leafRef(view.leaf)),
+      ', but your slip is for deposit ', mono(view.slip.ref.text), '. Do not accept it for the deposit on your slip: ask for the proof of that deposit.'),
+    h('p', { class: 'code-line' }, 'Verifier result: ', mono(r.code), '. Slip check: ', mono('SLIP_MISMATCH'),
+      ', made by this page only. The standalone script never sees your slip, so it cannot make this check.'));
+}
+
 function result(view, net) {
   // Verified needs both: one of the two codes, and the verifier's own flag.
   // Anything inconsistent is shown as no result, never as verified.
@@ -210,12 +249,18 @@ function result(view, net) {
   const r = consistent ? view.result : { ...view.result, code: 'COULD_NOT_CHECK', verified: false, facts: {} };
   // r is consistent here, so the code alone decides; the guard above is the check.
   const verified = VERIFIED.includes(r.code);
-  const claims = verified ? view.claims : null;
-  return h('div', { class: 'result', 'data-state': r.code },
+  // The slip check runs only on a verified proof: a verification failure is
+  // more fundamental, and is shown as it is whatever the slip says.
+  const check = verified ? compareSlip(view.slip?.ref, view.leaf) : null;
+  const mismatch = check === 'mismatch';
+  const claims = verified && !mismatch ? view.claims : null;
+  return h('div', { class: 'result', 'data-state': mismatch ? 'SLIP_MISMATCH' : r.code },
     claims?.status === 'ok' && claims.data.summary.recovery ? recoveryBanner() : null,
     view.source?.how === 'example' ? exampleNote() : null,
-    verdictBlock(r, net),
-    verified ? [honesty(r), deposit(view.leaf), claimsBlock(claims), anchor(r, view.anchorTime)] : null,
+    refPanel(view, verified, check),
+    mismatch ? slipMismatchBlock(r, view) : verdictBlock(r, net),
+    verified && !mismatch ? [honesty(r), deposit(view.leaf), claimsBlock(claims), anchor(r, view.anchorTime)] : null,
+    mismatch ? deposit(view.leaf) : null,
     sourceLine(view.source),
     endpointLine(r));
 }
@@ -236,9 +281,9 @@ function leafView(v) {
   return h('div', { class: 'result', 'data-state': 'SLIP_LEAF' },
     h('section', { class: 'verdict tone-nocheck', 'data-tone': 'nocheck' },
       h('h2', { class: 'verdict-head' }, icon('question'), h('span', null, 'A claim, not a proof: nothing was checked')),
-      h('p', null, 'This is the deposit record as Farmledge recorded it. It is a claim, not a proof. To check it you need the proof bundle for this deposit.')),
+      h('p', null, 'This is a deposit record in the form Farmledge uses. It is a claim, not a proof. To check it you need the proof bundle for this deposit.')),
     h('section', { class: 'facts unverified' },
-      h('h3', null, 'The record as printed on the slip: ', h('span', { class: 'stamp' }, 'unverified')),
+      h('h3', null, 'The record as given: ', h('span', { class: 'stamp' }, 'unverified')),
       h('dl', null,
         has('kind') ? row('Record', kind(l.kind)) : null,
         has('warehouse_id') ? row('Warehouse', mono(l.warehouse_id)) : null,
@@ -254,7 +299,7 @@ function leafView(v) {
 function howToGetBundle() {
   return h('section', { class: 'facts' },
     h('h3', null, 'How to get the proof bundle'),
-    h('p', null, "The warehouse's books are anchored on Stellar each night. Within 24 hours after that, the farmer is sent the proof bundle for this deposit by SMS link. Scan or paste that bundle here."));
+    h('p', null, 'Farmledge has no way to give you one yet. Its text-message sending is a placeholder that only writes to a log. When a bundle for this deposit does reach you, by any route, paste it, upload it or scan it here.'));
 }
 
 function plainView(state, tone, iconName, headline, body) {
@@ -284,8 +329,21 @@ export function warehouseView(w) {
       w.status === 'ok' ? h('p', { class: 'small' }, "Day roots stay on the ledger for 30 days; older days are committed in the warehouse's head chain, which this record does not unpack.") : null));
 }
 
-/** The page's result area for a view. */
+/** The slip's reference, when there is no bundle to compare it with. */
+function slipOnlyPanel(slip) {
+  return h('section', { class: `ref-panel ${slip.ref ? '' : 'ref-missing'}`, 'data-slip': slip.ref ? 'waiting' : slip.refBad ? 'unreadable' : 'missing' },
+    slip.ref ? [h('p', { class: 'ref-label' }, "Your slip's QR code names deposit"), h('p', null, bigRef(slip.ref.text)), h('p', { class: 'ref-check' }, h('strong', null, 'Check this matches the deposit number printed on the slip.'))]
+      : h('p', null, h('strong', null, slip.refBad ? "The link's slip reference could not be read, so no bundle can be compared with your slip." : 'The link carried no slip reference, so no bundle can be compared with your slip.')));
+}
+
+/** The page's result area for a view. A slip, when the page was opened from one, heads every view. */
 export function render(view, net) {
+  const node = renderView(view, net);
+  if (view.slip && view.kind !== 'result' && view.kind !== 'slip-waiting' && node.props.class === 'result') node.children.unshift(slipOnlyPanel(view.slip));
+  return node;
+}
+
+function renderView(view, net) {
   switch (view.kind) {
     case 'idle': return h('div', { class: 'result', 'data-state': 'IDLE' });
     case 'checking': return h('div', { class: 'result', 'data-state': 'CHECKING', 'aria-busy': 'true' },
@@ -299,6 +357,11 @@ export function render(view, net) {
     case 'unknown': return plainView('UNKNOWN', 'nocheck', 'question', 'Not a proof bundle: nothing was checked',
       'This page checks Farmledge proof bundles. A deposit number or a slip reference cannot be checked against the ledger: it carries no record and no proof.');
     case 'warehouse': return warehouseView(view.warehouse);
+    case 'slip-waiting': return h('div', { class: 'result', 'data-state': 'SLIP_WAITING' },
+      slipOnlyPanel(view.slip),
+      h('section', { class: 'verdict tone-nocheck', 'data-tone': 'nocheck' },
+        h('h2', { class: 'verdict-head' }, icon('question'), h('span', null, 'Nothing checked yet')),
+        h('p', null, view.reason, ' Paste or upload the proof bundle for this deposit: it will be checked against the ledger, and compared with your slip.')));
     default: return h('div', { class: 'result' });
   }
 }

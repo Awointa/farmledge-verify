@@ -10,11 +10,15 @@ import { isWarehouseId, warehouseRecord } from './warehouse.js';
 import { VERIFIED, render } from './render.js';
 import { mount } from './dom.js';
 import { canScan, scanCamera } from './qr.js';
+import { compareSlip, resolverUrl, slipFromFragment } from './slip.js';
 
 const ctx = Object.freeze({ rpcUrl: NETWORK.rpcUrl, contractId: NETWORK.contractId });
 const $ = (id) => document.getElementById(id);
 const out = $('result');
 let current = 0; // a newer check supersedes an older one
+// The slip named by the link that opened this page (#p=, #d=), or null.
+// Every bundle checked on this page is compared with it, after verifying.
+let slip = null;
 
 function show(view) { mount(out, render(view, NETWORK)); }
 function status(text) { $('input-status').textContent = text; }
@@ -24,7 +28,7 @@ async function check(text, source) {
   status('');
   const input = classifyInput(text);
   if (input.kind !== 'bundle') {
-    show({ ...input, source });
+    show({ ...input, source, slip });
     out.scrollIntoView({ block: 'start', behavior: 'smooth' });
     return;
   }
@@ -32,9 +36,10 @@ async function check(text, source) {
   out.scrollIntoView({ block: 'start', behavior: 'smooth' });
   const result = await verifyBundle(input.bundle, ctx);
   if (run !== current) return;
-  const view = { kind: 'result', result, leaf: input.bundle.leaf, source };
+  const view = { kind: 'result', result, leaf: input.bundle.leaf, source, slip };
   show(view);
   if (!(VERIFIED.includes(result.code) && result.verified)) return;
+  if (compareSlip(slip?.ref, input.bundle.leaf) === 'mismatch') return; // not the slip's lot: its claims are not read
 
   // The lot's claims and the anchor's time: further chain reads, shown as they arrive.
   view.claims = { status: 'loading' };
@@ -124,16 +129,24 @@ $('wh-form').addEventListener('submit', async (e) => {
 });
 
 // A bundle can also arrive in the link: #bundle=<base64url JSON> (never
-// sent to any server), or ?src=<https URL> to fetch it from anywhere,
-// Farmledge included. Either way it is only a claim, and the page says so.
+// sent to any server), ?src=<https URL> to fetch it from anywhere,
+// Farmledge included, or a reprinted slip's #p=<token>&d=<warehouse>.<no>.
+// Whatever the route it is only a claim, and the page says where it came from.
 async function fromLink() {
-  const hash = new URLSearchParams(location.hash.slice(1)).get('bundle');
+  const frag = new URLSearchParams(location.hash.slice(1));
+  if (frag.has('p') || frag.has('d')) slip = slipFromFragment(location.hash);
+  const hash = frag.get('bundle');
   if (hash) {
     try {
       const text = new TextDecoder().decode(Uint8Array.from(atob(hash.replace(/-/g, '+').replace(/_/g, '/')), (c) => c.charCodeAt(0)));
       $('bundle').value = text;
       check(text, { how: 'link' });
     } catch { status('The link carries a bundle that could not be decoded.'); }
+    return;
+  }
+  if (slip?.token) { await fromToken(slip.token); return; }
+  if (slip) {
+    show({ kind: 'slip-waiting', slip, reason: slip.tokenBad ? "The link's proof token is damaged, so no bundle was fetched." : 'The link carries no bundle.' });
     return;
   }
   const src = new URLSearchParams(location.search).get('src');
@@ -151,6 +164,34 @@ async function fromLink() {
       status(`The bundle could not be fetched from ${url.href}. Paste or upload it instead.`);
     }
   }
+}
+
+// A reprinted slip's token (API D58). It stays in the fragment, so this
+// page's host never sees it; it goes only to Farmledge's proof API, which
+// is page configuration, to fetch the bundle it names.
+async function fromToken(token) {
+  const wait = (reason) => show({ kind: 'slip-waiting', slip, reason });
+  if (!NETWORK.proofApi) { wait('This page has no Farmledge address set to fetch the bundle the link names, so nothing was fetched.'); return; }
+  const url = resolverUrl(NETWORK.proofApi, token);
+  status('Fetching the bundle from Farmledge…');
+  const ctl = new AbortController();
+  const timer = setTimeout(() => ctl.abort(), NETWORK.proofTimeoutMs);
+  let res, text;
+  try {
+    res = await fetch(url, { signal: ctl.signal, credentials: 'omit', referrerPolicy: 'no-referrer', cache: 'no-store' });
+    if (res.ok) text = await res.text();
+  } catch {
+    res = null;
+  } finally {
+    clearTimeout(timer);
+    status('');
+  }
+  if (res === null) { wait(ctl.signal.aborted ? `Farmledge did not answer within ${NETWORK.proofTimeoutMs / 1000} seconds, so nothing was fetched.` : 'The bundle could not be fetched from Farmledge: no answer.'); return; }
+  if (res.status === 404) { wait('Farmledge has no proof for the token in this link.'); return; }
+  if (res.status === 429) { wait('Farmledge is refusing requests: too many were made. Reload the page shortly.'); return; }
+  if (!res.ok) { wait(`The bundle could not be fetched from Farmledge (HTTP ${res.status}).`); return; }
+  $('bundle').value = text;
+  check(text, { how: 'token', detail: url });
 }
 
 $('network-name').textContent = NETWORK.name;
